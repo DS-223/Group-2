@@ -1,11 +1,16 @@
-
-# SmartCRM 🍽️  
 **An Analytical CRM System for Restaurants and Cafes in Armenia**
 
 ## 📌 Project Overview
 SmartCRM is a next-generation analytical CRM platform designed specifically for restaurants and cafes in Armenia. The system focuses on customer retention, behavior analysis, and AI-driven personalization using data collected from NFC chips and POS systems.
 
 Unlike traditional CRMs that focus on operations, SmartCRM provides intelligent insights to help restaurants make data-informed decisions, improve loyalty, and increase revenue.
+
+---
+
+### Frontend Prototype
+
+Check out our interactive UI design on **Figma**:  
+[🔗 View Figma Design](https://www.figma.com/design/gqCNSPu1h9mv7ZdZHixP1n/Untitled?node-id=0-1&t=TzPQFIS8f6frigWg-1)
 
 ---
 
@@ -59,8 +64,6 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run FastAPI server (example)
-uvicorn backend.main:app --reload
 ```
 
 ---
