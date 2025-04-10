@@ -67,11 +67,11 @@ uvicorn backend.main:app --reload
 
 ## 👥 Team Roles
 
-- **Project/Product Manager:** [Your Name]  
-- **Data Scientist:** [Team Member Name]  
-- **Backend Developer:** [Team Member Name]  
-- **Frontend Developer:** [Team Member Name]  
-- **Database Developer:** [Team Member Name]  
+- **Project/Product Manager:** Davit Sargsyan  
+- **Data Scientist:** Mane Koshkaryan  
+- **Backend Developer:** Armen Madoyan  
+- **Frontend Developer:** Sona Stepanyan  
+- **Database Developer:** Anna Minasyan 
 
 ---
 
