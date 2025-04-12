@@ -1,6 +1,6 @@
 # This is a gitignore file for Python projects.
 # Custom ignores
-Feedback.md
+**Feedback.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
