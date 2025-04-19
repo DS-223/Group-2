@@ -1,13 +1,16 @@
 
 
 import os
+import glob
 import sys
+import pandas as pd
 from loguru import logger
 
 sys.path.append(os.path.dirname(__file__))
 
 
 from data_generator import simulate_all
+from  etl.Database.database import engine
 
 N_TABLES       = 10
 N_DAYS         = 365
@@ -34,3 +37,20 @@ for table_name, df in dfs.items():
     df.to_csv(csv_path, index=False)
     logger.info(f"Saved {len(df)} rows to {csv_path}")
 
+
+def load_csv_to_table(table_name: str, csv_path: str) -> None:
+    df = pd.read_csv(csv_path)
+    df.to_sql(table_name, con=engine, if_exists="append", index=False)
+    logger.info(f"Loaded {len(df)} rows into table '{table_name}'")
+
+
+logger.info("Beginning data ingestion into database…")
+csv_files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
+for file_path in csv_files:
+    table = os.path.splitext(os.path.basename(file_path))[0]
+    try:
+        load_csv_to_table(table, file_path)
+    except Exception as e:
+        logger.error(f"Failed to load {table} from {file_path}: {e}")
+
+logger.info("ETL process complete. All tables populated.")
