@@ -4,7 +4,6 @@ import random
 from datetime import datetime
 from loguru import logger
 
-# Initialize Faker and Logger
 fake = Faker()
 logger.add(lambda msg: print(msg), level="INFO")
 
