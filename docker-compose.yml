@@ -34,7 +34,7 @@ services:
   etl:
     container_name: etl
     build:
-      context: ./etl
+      context: .
       dockerfile: Dockerfile
     ports:
       - 3000:3000

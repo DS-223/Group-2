@@ -5,12 +5,14 @@ RUN apt-get update && apt-get install -y \
     libblas-dev liblapack-dev gfortran \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /etl
+WORKDIR .
 
-COPY requirements.txt . 
+COPY requirements.txt .
+COPY .env .
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 
+WORKDIR /etl
 COPY . .
 
 EXPOSE 3000
