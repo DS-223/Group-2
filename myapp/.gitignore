@@ -1,5 +1,6 @@
 # This is a gitignore file for Python projects.
 # Custom ignores
+.env
 feedback/*.md
 
 # Byte-compiled / optimized / DLL files
