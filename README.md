@@ -40,13 +40,40 @@ Check out our interactive UI design on **Figma**:
 
 ```
 .
-├── backend/               # FastAPI backend service
-├── data/                  # Datasets and processing scripts
-├── models/                # ML models and notebooks
-├── frontend/              # UI/UX prototypes or Streamlit apps
-├── requirements.txt       # Python dependencies
-├── .gitignore             # Ignored files and folders
-└── README.md              # Project overview
+├── docs
+│   └── index.md
+├── feedback
+│   └── Milestone 1 Feedback....
+├── myapp
+│   ├── api
+│   │   ├── Dockerfile
+│   │   ├── __init__.py
+│   │   ├── crud.py
+│   │   ├── data_access.py
+│   │   ├── database.py
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   ├── requirements.txt
+│   │   └── schemas.py
+│   ├── etl
+│   │   ├── Dockerfile
+│   │   ├── __init__.py
+│   │   ├── data_generator.py
+│   │   ├── etl_process.py
+│   │   └── requirements.txt
+│   └── frontend
+│       ├── Dockerfile
+│       ├── app.py
+│       └── requirements.txt
+├── .gitignore
+├── docker-compose.yml
+├── Problem Definition – Ma...
+├── README.md
+├── Roadmap Group-2.pdf
+├── erd.png
+├── mkdocs.yml
+└── mkdocs_requirements.txt
+
 ```
 
 ---
