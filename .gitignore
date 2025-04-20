@@ -33,13 +33,13 @@ venv/
 env/
 ENV/
 .venv/
-.env/
-.ENV/
+myapp/etl/.env/
+myapp/etl/.env/
 pip-log.txt
 pip-delete-this-directory.txt
 
 # Environments and secrets
-.env
+myapp/etl/.env
 .env.*
 
 # PyInstaller

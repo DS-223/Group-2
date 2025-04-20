@@ -5,12 +5,21 @@ import glob
 import sys
 import pandas as pd
 from loguru import logger
-
+import sqlalchemy as sql
 sys.path.append(os.path.dirname(__file__))
-
-
 from data_generator import simulate_all
-from Database.database import engine
+from dotenv import load_dotenv
+
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in .env")
+
+engine = sql.create_engine(DATABASE_URL, echo=True)
+
+
 
 N_TABLES       = 10
 N_DAYS         = 365
