@@ -117,3 +117,7 @@ Thumbs.db
 ehthumbs.db
 site/
 venv_docs/
+
+pgadmin_data/
+postgres_data/
+
