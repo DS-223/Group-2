@@ -62,18 +62,16 @@ services:
       test: "exit 0"
 
   frontend:
-    container_name: cont_d
+    container_name: frontend
     build:
-      context: ./cont-d
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "8501:8501"
     volumes:
-      - ./cont-d:/app
+      - ./frontend:/app
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql+psycopg2://postgres:securepassword@db:5432/CRM
     healthcheck:
       test: "exit 0"
