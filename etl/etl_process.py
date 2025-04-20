@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(__file__))
 
 
 from data_generator import simulate_all
-from  etl.Database.database import engine
+from Database.database import engine
 
 N_TABLES       = 10
 N_DAYS         = 365
@@ -32,12 +32,14 @@ dfs = simulate_all(
     n_campaigns=N_CAMPAIGNS
 )
 
+logger.info("Saving the data to csv files")
 for table_name, df in dfs.items():
     csv_path = os.path.join(DATA_DIR, f"{table_name}.csv")
     df.to_csv(csv_path, index=False)
     logger.info(f"Saved {len(df)} rows to {csv_path}")
 
 
+logger.info("Load the csv files into the tables")
 def load_csv_to_table(table_name: str, csv_path: str) -> None:
     df = pd.read_csv(csv_path)
     df.to_sql(table_name, con=engine, if_exists="append", index=False)

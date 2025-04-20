@@ -2,7 +2,7 @@
 Database Configuration
 """
 import sqlalchemy as sql
-import sqlalchemy.ext.declarative as declarative
+from sqlalchemy.orm import declarative_base
 import sqlalchemy.orm as orm
 from dotenv import load_dotenv
 import os
@@ -18,15 +18,19 @@ def get_db():
     finally:
         db.close()
 
-load_dotenv(".env")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+
+
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set in .env")
 
 engine = sql.create_engine(DATABASE_URL, echo=True)
 
-Base = declarative.declarative_base()
+
+Base = declarative_base()
 
 SessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
