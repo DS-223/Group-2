@@ -36,16 +36,51 @@ def generate_dim_time(time_id: int,
 
 
 def generate_dim_menu_item(item_id: int) -> dict:
-    categories = [
-        "Coffee", "Tea", "Espresso", "Cold Brew", "Juice", "Smoothie",
-        "Pastry", "Cake", "Sandwich", "Salad", "Soup", "Breakfast",
-        "Snack", "Alcohol", "Non‑Alcoholic", "Specialty"
-    ]
+    # Realistic menu catalog by category
+    menu_catalog = {
+        "Coffee": ["Espresso", "Americano", "Cappuccino", "Latte", "Mocha", "Flat White"],
+        "Tea": ["Black Tea", "Green Tea", "Herbal Tea", "Oolong Tea", "Chamomile"],
+        "Pastry": ["Croissant", "Blueberry Muffin", "Chocolate Donut", "Baklava", "Cherry Tart"],
+        "Sandwich": ["Club Sandwich", "Panini", "BLT", "Turkey Wrap", "Grilled Cheese"],
+        "Smoothie": ["Strawberry Banana Smoothie", "Green Detox Smoothie", "Mango Lassi"],
+        "Juice": ["Orange Juice", "Apple Juice", "Carrot Ginger Juice", "Beetroot Juice"],
+        "Salad": ["Caesar Salad", "Greek Salad", "Quinoa Salad", "Caprese Salad"],
+        "Soup": ["Tomato Basil Soup", "Chicken Noodle Soup", "Mushroom Soup", "Lentil Soup"],
+        "Breakfast": ["Pancakes", "French Toast", "Omelette", "Avocado Toast"],
+        "Snack": ["Fruit Bowl", "Yogurt Parfait", "Granola Bar", "Nachos"],
+        "Alcohol": ["Red Wine", "White Wine", "Local Beer", "Mojito", "Whiskey Sour"],
+        "Non‑Alcoholic": ["Sparkling Water", "Lemonade", "Iced Tea", "Soft Drink"],
+        "Specialty": ["Affogato", "Turkish Coffee", "Matcha Latte", "Chai Latte"]
+    }
+
+    # Select category and item name
+    category = random.choice(list(menu_catalog.keys()))
+    item_name = random.choice(menu_catalog[category])
+
+    # Define base price ranges by category
+    price_ranges = {
+        "Coffee": (2.5, 5.0),
+        "Tea": (1.5, 4.0),
+        "Pastry": (1.0, 3.5),
+        "Sandwich": (4.0, 8.0),
+        "Smoothie": (3.5, 6.5),
+        "Juice": (2.5, 5.0),
+        "Salad": (3.5, 7.0),
+        "Soup": (3.0, 6.0),
+        "Breakfast": (5.0, 10.0),
+        "Snack": (1.0, 4.0),
+        "Alcohol": (4.0, 12.0),
+        "Non‑Alcoholic": (1.0, 3.0),
+        "Specialty": (3.0, 7.0)
+    }
+    low, high = price_ranges.get(category, (2.0, 6.0))
+    price = round(random.uniform(low, high), 2)
+
     return {
         "item_id": item_id,
-        "item_name": fake.word().capitalize(),
-        "price": round(random.uniform(1.5, 15.0), 2),
-        "category": random.choice(categories)
+        "item_name": item_name,
+        "price": price,
+        "category": category
     }
 
 
@@ -82,15 +117,26 @@ def generate_marketing_campaign(campaign_id: int, max_time_id: int = 365) -> dic
     start = random.randint(1, max_time_id - 1)
     end = random.randint(start, max_time_id)
     segments = ["High Value", "At Risk", "New", "Promising"]
+
+    campaign_names = [
+        "Double Points Week", "Smoothie Sunday", "Happy Hour Promo", "Loyalty Launch",
+        "Review & Reward", "VIP Tasting Event", "Menu Discovery Week"
+    ]
+
+    descriptions = [
+        "Get 2x points on all coffee orders", "Free dessert with lunch combos",
+        "Special discounts for new members", "Win-back offer for past visitors",
+        "Try our new seasonal menu and earn points"
+    ]
+
     return {
         "campaign_id": campaign_id,
-        "name": fake.bs().title(),
+        "name": random.choice(campaign_names),
         "start_time_id": start,
         "end_time_id": end,
         "target_segment": random.choice(segments),
-        "description": fake.sentence(nb_words=8)
+        "description": random.choice(descriptions)
     }
-
 
 # --- Orchestrator ---
 
