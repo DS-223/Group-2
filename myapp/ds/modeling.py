@@ -1,12 +1,44 @@
+import requests
 import pandas as pd
 
-def rfm_score_segment_fast(df):
-    """
-    Fast version of RFM scoring & segmentation.
-    Assumes df has columns: recency_days, frequency, monetary
-    """
+API_BASE = "http://api:8000"
 
-    # Use rank directly and bin using quantiles without apply
+# Fetch users
+users = requests.get(f"{API_BASE}/users/").json()
+df_users = pd.DataFrame(users)
+
+# Fetch transactions
+transactions = requests.get(f"{API_BASE}/transactions/").json()
+df_transactions = pd.DataFrame(transactions)
+
+# Ensure datetime
+df_transactions["created_at"] = pd.to_datetime(df_transactions["created_at"])
+
+# Join on mobile_id
+df = df_transactions.merge(df_users, on="mobile_id", how="inner")
+
+# RFM base calculation
+rfm_base = (
+    df.groupby("mobile_id")
+    .agg(
+        last_transaction_date=("created_at", "max"),
+        frequency=("transaction_id", "nunique"),
+        monetary=("total_amount", "sum")
+    )
+    .reset_index()
+)
+
+rfm_base["recency_days"] = (pd.Timestamp.now().normalize() - rfm_base["last_transaction_date"]).dt.days
+
+rfm = rfm_base[["mobile_id", "recency_days", "frequency", "monetary"]].sort_values(
+    by=["recency_days", "frequency", "monetary"], ascending=[True, False, False]
+)
+
+# ============================
+# RFM Scoring & Segmentation
+# ============================
+
+def rfm_score_segment_fast(df):
     df['R_rank'] = df['recency_days'].rank(method='first', ascending=True)
     df['F_rank'] = df['frequency'].rank(method='first', ascending=False)
     df['M_rank'] = df['monetary'].rank(method='first', ascending=False)
@@ -17,7 +49,6 @@ def rfm_score_segment_fast(df):
 
     df['RFM_score'] = df['R_score'].astype(str) + df['F_score'].astype(str) + df['M_score'].astype(str)
 
-    # Faster vectorized segmentation
     conditions = [
         (df['R_score'] >= 4) & (df['F_score'] >= 4),
         (df['R_score'] >= 3) & (df['F_score'] >= 3),
@@ -31,10 +62,7 @@ def rfm_score_segment_fast(df):
 
     return df.drop(columns=['R_rank', 'F_rank', 'M_rank'])
 
-rfm_df = pd.read_csv("rfm.csv")
+rfm_result = rfm_score_segment_fast(rfm)
 
 
-rfm_result = rfm_score_segment_fast(rfm_df)
-
-# Preview
 print(rfm_result.head())
