@@ -1,21 +1,34 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import altair as alt
+import os
+import sqlalchemy as sql
+from dotenv import load_dotenv
+
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in .env")
+
+engine = sql.create_engine(DATABASE_URL, echo=True)
+
 
 st.set_page_config(page_title="SmartCRM", layout="wide")
-st.title("🍽️ SmartCRM for Restaurants & Cafes in Armenia")
+st.title("🍽 SmartCRM for Restaurants & Cafes in Armenia")
 
 @st.cache_data
 def load_data():
-    path = "../../data/"
-    menu = pd.read_csv(path + "dim_menu_items.csv")
-    tables = pd.read_csv(path + "dim_tables.csv")
-    time = pd.read_csv(path + "dim_time.csv")
-    trans_items = pd.read_csv(path + "fact_transaction_items.csv")
-    trans = pd.read_csv(path + "fact_transactions.csv")
-    campaigns = pd.read_csv(path + "marketing_campaigns.csv")
-    nfc = pd.read_csv(path + "nfc_engagements.csv")
+
+    menu = pd.read_sql("SELECT * FROM dim_menu_items", engine)
+    tables = pd.read_sql("SELECT * FROM dim_tables", engine)
+    time = pd.read_sql("SELECT * FROM dim_time", engine)
+    trans_items = pd.read_sql("SELECT * FROM fact_transaction_items", engine)
+    trans = pd.read_sql("SELECT * FROM fact_transactions", engine)
+    campaigns = pd.read_sql("SELECT * FROM marketing_campaigns", engine)
+    nfc = pd.read_sql("SELECT * FROM nfc_engagements", engine)
+
     return menu, tables, time, trans_items, trans, campaigns, nfc
 
 menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
