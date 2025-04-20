@@ -5,27 +5,37 @@ from database import engine
 
 Base = declarative_base()
 
+class DimUser(Base):
+    __tablename__ = "dim_users"
+    mobile_id = Column(String, primary_key=True, comment="Hashed/anonymous device identifier")
+    notes     = Column(Text)
+
+    transactions = relationship("FactTransaction", back_populates="user")
+    engagements  = relationship("NfcEngagement",  back_populates="user")
+
 class FactTransaction(Base):
     __tablename__ = "fact_transactions"
     transaction_id = Column(Integer, primary_key=True)
+    mobile_id      = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
     table_id       = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
     time_id        = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
     total_amount   = Column(Numeric)
     created_at     = Column(TIMESTAMP)
 
-    table = relationship("DimTable", back_populates="transactions")
-    time  = relationship("DimTime",  back_populates="transactions")
-    items = relationship("FactTransactionItem", back_populates="transaction")
+    user        = relationship("DimUser",           back_populates="transactions")
+    table       = relationship("DimTable",          back_populates="transactions")
+    time        = relationship("DimTime",           back_populates="transactions")
+    items       = relationship("FactTransactionItem", back_populates="transaction")
 
 class FactTransactionItem(Base):
     __tablename__ = "fact_transaction_items"
     transaction_id = Column(Integer, ForeignKey("fact_transactions.transaction_id"), primary_key=True)
-    item_id        = Column(Integer, ForeignKey("dim_menu_items.item_id"), primary_key=True)
+    item_id        = Column(Integer, ForeignKey("dim_menu_items.item_id"),      primary_key=True)
     quantity       = Column(Integer)
-    price          = Column(Numeric) 
+    price          = Column(Numeric)
 
-    transaction = relationship("FactTransaction", back_populates="items")
-    item        = relationship("DimMenuItem", back_populates="transaction_items")
+    transaction     = relationship("FactTransaction",   back_populates="items")
+    item            = relationship("DimMenuItem",       back_populates="transaction_items")
 
 class DimTable(Base):
     __tablename__ = "dim_tables"
@@ -46,7 +56,7 @@ class DimTime(Base):
     year        = Column(Integer)
     is_weekend  = Column(Boolean)
 
-    transactions     = relationship("FactTransaction", back_populates="time")
+    transactions     = relationship("FactTransaction",  back_populates="time")
     marketing_starts = relationship(
         "MarketingCampaign",
         back_populates="start_time",
@@ -70,12 +80,14 @@ class DimMenuItem(Base):
 class NfcEngagement(Base):
     __tablename__ = "nfc_engagements"
     engagement_id   = Column(Integer, primary_key=True)
+    mobile_id       = Column(String,  ForeignKey("dim_users.mobile_id"), nullable=False)
     table_id        = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
-    tag_type        = Column(String)  
-    mobile_id       = Column(String, comment="Hashed/anonymous device identifier")
+    tag_type        = Column(String)
     engagement_time = Column(TIMESTAMP)
 
-    table = relationship("DimTable", back_populates="engagements")
+    user  = relationship("DimUser",    back_populates="engagements")
+    table = relationship("DimTable",   back_populates="engagements")
+
 
 class MarketingCampaign(Base):
     __tablename__ = "marketing_campaigns"
