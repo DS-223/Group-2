@@ -1,5 +1,6 @@
 **An Analytical CRM System for Restaurants and Cafes in Armenia**
 
+
 ## 📌 Project Overview
 SmartCRM is a next-generation analytical CRM platform designed specifically for restaurants and cafes in Armenia. The system focuses on customer retention, behavior analysis, and AI-driven personalization using data collected from NFC chips and POS systems.
 
