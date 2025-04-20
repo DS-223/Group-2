@@ -1,6 +1,8 @@
 # This is a gitignore file for Python projects.
 # Custom ignores
 .env
+pgadmin_data
+postgres_data
 feedback/*.md
 
 # Byte-compiled / optimized / DLL files
