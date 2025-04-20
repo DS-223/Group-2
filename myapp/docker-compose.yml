@@ -6,41 +6,41 @@ services:
     restart: always
     ports:
       - 5432:5432
-    environment: 
+    environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U postgres"]  
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
         interval: 60s
         timeout: 10s
         retries: 5
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data 
-            
-  pgadmin:  
+      - ./postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
     ports:
-      - 5050:80 
+      - 5050:80
     volumes:
-      - ./pgadmin_data:/var/lib/pgadmin 
-    depends_on: 
+      - ./pgadmin_data:/var/lib/pgadmin
+    depends_on:
       - db
 
   etl:
     container_name: etl
     build:
-      context: /etl
+      context: ./etl
       dockerfile: Dockerfile
     ports:
       - 3000:3000
     volumes:
         - ./etl:/etl
-    depends_on: 
+    depends_on:
       db:
         condition: service_healthy
     healthcheck:
@@ -49,7 +49,7 @@ services:
   api:
     container_name: fastapi_api
     build:
-      context: /api
+      context: ./api
       dockerfile: Dockerfile
     ports:
       - 8000:8000
@@ -69,9 +69,25 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      - ./frontend:/app
+      - ./frontend:/frontend
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
       test: "exit 0"
+
+  ds:
+    container_name: ds
+    build:
+      context: ./ds
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    volumes:
+      - ./ds:/ds
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: "exit 0"
+
