@@ -77,6 +77,7 @@ class FactTransactionCreate(FactTransactionBase):
 class FactTransactionOut(FactTransactionBase):
     transaction_id: int
     table_id: int
+    mobile_id: str
     time_id: int
     created_at: datetime
     items: List[FactTransactionItemOut]
@@ -114,5 +115,12 @@ class MarketingCampaignOut(MarketingCampaignBase):
     campaign_id: int
     start_time_id: int
     end_time_id: int
+    class Config:
+        orm_mode = True
+
+class DimUserOut(BaseModel):
+    mobile_id: str
+    # add more fields as needed
+
     class Config:
         orm_mode = True

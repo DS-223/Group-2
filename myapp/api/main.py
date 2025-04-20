@@ -47,3 +47,7 @@ def get_transactions(db: Session = Depends(get_db)):
 @app.get("/campaigns/", response_model=list[schemas.MarketingCampaignOut])
 def get_campaigns(db: Session = Depends(get_db)):
     return crud.campaign_crud.get_all(db)
+
+@app.get("/users/", response_model=list[schemas.DimUserOut])
+def get_users(db: Session = Depends(get_db)):
+    return crud.user_crud.get_all(db)

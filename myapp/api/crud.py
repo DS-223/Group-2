@@ -1,7 +1,8 @@
 from data_access import CRUDBase
-from models import DimTable, DimTime, FactTransaction, MarketingCampaign
+from models import DimTable, DimTime, FactTransaction, MarketingCampaign, DimUser
 
 table_crud = CRUDBase(DimTable)
 time_crud = CRUDBase(DimTime)
 transaction_crud = CRUDBase(FactTransaction)
 campaign_crud = CRUDBase(MarketingCampaign)
+user_crud = CRUDBase(DimUser)

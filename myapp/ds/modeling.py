@@ -10,8 +10,9 @@ df_users = pd.DataFrame(users)
 # Fetch transactions
 transactions = requests.get(f"{API_BASE}/transactions/").json()
 df_transactions = pd.DataFrame(transactions)
-
+# print('users', users, 'transactions', transactions)
 # Ensure datetime
+
 df_transactions["created_at"] = pd.to_datetime(df_transactions["created_at"])
 
 # Join on mobile_id
