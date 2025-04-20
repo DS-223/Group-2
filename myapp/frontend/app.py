@@ -36,7 +36,7 @@ menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
 trans = trans.merge(time_df, on="time_id", how="left")
 trans["month"] = pd.to_numeric(trans["month"], errors="coerce")
 
-section = st.sidebar.radio("Go to", ["Dashboard", "Customer Segments", "Campaigns", "Menu Recommender"])
+section = st.sidebar.radio("Go to", ["Dashboard", "Customer Segments", "Campaigns"])
 
 if section == "Dashboard":
     st.subheader("📊 Reporting and Analysis")
@@ -169,9 +169,3 @@ elif section == "Campaigns":
         st.dataframe(campaigns)
     else:
         st.warning("No campaigns data available.")
-
-elif section == "Menu Recommender":
-    st.subheader("📋 Menu Recommendation Engine")
-    cust_id = st.text_input("Enter Customer ID")
-    if cust_id:
-        st.success(f"Recommended for customer {cust_id}: 🍕 Pizza, 🍣 Sushi, 🍷 Wine")
