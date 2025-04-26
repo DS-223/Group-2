@@ -36,6 +36,7 @@ services:
     build:
       context: ./etl
       dockerfile: Dockerfile
+    image: myapp_etl:latest # to avoid conflicts with other images
     ports:
       - 3000:3000
     volumes:
@@ -51,6 +52,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+    image: myapp_api:latest # to avoid conflicts with other images
     ports:
       - 8000:8000
     volumes:
@@ -66,6 +68,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: myapp_frontend:latest # to avoid conflicts with other images
     ports:
       - "8501:8501"
     volumes:
@@ -81,6 +84,7 @@ services:
     build:
       context: ./ds
       dockerfile: Dockerfile
+    image: myapp_etl:latest # to avoid conflicts with other images
     ports:
       - "3030:3030"
     volumes:
