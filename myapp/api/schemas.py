@@ -124,3 +124,22 @@ class DimUserOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class RFMResultCreate(BaseModel):
+    mobile_id: str
+    recency_days: int
+    frequency: int
+    monetary: float
+    R_score: int
+    F_score: int
+    M_score: int
+    RFM_score: str
+    segment: str
+    date_created: datetime
+
+class RFMResultOut(RFMResultCreate):
+    rfm_id: int
+
+    class Config:
+        orm_mode = True
