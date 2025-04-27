@@ -1,6 +1,9 @@
 """
-Database Configuration
+Database Configuration.
+
+Sets up the SQLAlchemy engine, base class, and session factory for database operations.
 """
+
 import sqlalchemy as sql
 from sqlalchemy.orm import declarative_base
 import sqlalchemy.orm as orm
@@ -9,8 +12,9 @@ import os
 
 def get_db():
     """
-    Function to get a database session. 
-    Yields a session, then closes it when done.
+    Provide a database session.
+    Yields:
+        Session: A SQLAlchemy database session.
     """
     db = SessionLocal()
     try:

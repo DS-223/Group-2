@@ -1,3 +1,7 @@
+"""
+Data generation functions for simulating a café's customer, menu, transactions, and marketing activities.
+"""
+
 from faker import Faker
 import pandas as pd
 import random
@@ -9,11 +13,25 @@ logger.add(lambda msg: print(msg), level="INFO")
 
 
 def generate_dim_user(mobile_id: str) -> dict:
+    """
+    Generate a user record for the dimension table.
+    Args:
+        mobile_id (str): Unique mobile ID.
+    Returns:
+        dict: Dictionary with user data.
+    """
     return {"mobile_id": mobile_id, "notes": ""}
 
 
 
 def generate_dim_table(table_id: int) -> dict:
+    """
+    Generate a table record with NFC tags.
+    Args:
+        table_id (int): Unique table ID.
+    Returns:
+        dict: Dictionary with table data including NFC tags.
+    """
     return {
         "table_id": table_id,
         "nfc_wifi_tag": fake.uuid4(),
@@ -25,6 +43,15 @@ def generate_dim_table(table_id: int) -> dict:
 def generate_dim_time(time_id: int,
                       start_date: datetime = datetime(2024, 1, 1),
                       end_date: datetime = datetime(2024, 12, 31)) -> dict:
+    """
+    Generate a time dimension record with random date attributes.
+    Args:
+        time_id (int): Unique time ID.
+        start_date (datetime, optional): Start of date range. Defaults to 2024-01-01.
+        end_date (datetime, optional): End of date range. Defaults to 2024-12-31.
+    Returns:
+        dict: Dictionary with time attributes (date, day, month, year, weekend flag).
+    """
     # pick a random day in the year
     rand_day = fake.date_between(start_date=start_date, end_date=end_date)
     return {
@@ -38,6 +65,13 @@ def generate_dim_time(time_id: int,
 
 
 def generate_dim_menu_item(item_id: int) -> dict:
+    """
+    Generate a menu item record with category, name, and price.
+    Args:
+        item_id (int): Unique menu item ID.
+    Returns:
+        dict: Dictionary with menu item details.
+    """
     # Realistic menu catalog by category
     menu_catalog = {
         "Coffee": ["Espresso", "Americano", "Cappuccino", "Latte", "Mocha", "Flat White"],
@@ -87,6 +121,14 @@ def generate_dim_menu_item(item_id: int) -> dict:
 
 
 def generate_nfc_engagement(engagement_id: int, mobile_pool: list[str]) -> dict:
+    """
+    Generate a random NFC engagement record.
+    Args:
+        engagement_id (int): Unique engagement ID.
+        mobile_pool (list[str]): List of available mobile IDs.
+    Returns:
+        dict: Dictionary with NFC engagement data.
+    """
     return {
         "engagement_id": engagement_id,
         "table_id": random.randint(1, 10),
@@ -97,6 +139,14 @@ def generate_nfc_engagement(engagement_id: int, mobile_pool: list[str]) -> dict:
 
 
 def generate_fact_transaction(transaction_id: int, mobile_pool: list[str]) -> dict:
+    """
+    Generate a transaction record for the fact table.
+    Args:
+        transaction_id (int): Unique transaction ID.
+        mobile_pool (list[str]): List of available mobile IDs.
+    Returns:
+        dict: Dictionary with transaction data.
+    """
     return {
         "transaction_id": transaction_id,
         "mobile_id": random.choice(mobile_pool),
@@ -108,6 +158,14 @@ def generate_fact_transaction(transaction_id: int, mobile_pool: list[str]) -> di
 
 
 def generate_fact_transaction_item(transaction_id: int, item_id: int) -> dict:
+    """
+    Generate a transaction item record linking a transaction to menu items.
+    Args:
+        transaction_id (int): ID of the related transaction.
+        item_id (int): ID of the purchased item.
+    Returns:
+        dict: Dictionary with transaction item data.
+    """
     return {
         "transaction_id": transaction_id,
         "item_id": item_id,
@@ -117,6 +175,14 @@ def generate_fact_transaction_item(transaction_id: int, item_id: int) -> dict:
 
 
 def generate_marketing_campaign(campaign_id: int, max_time_id: int = 365) -> dict:
+    """
+    Generate a marketing campaign record.
+    Args:
+        campaign_id (int): Unique campaign ID.
+        max_time_id (int, optional): Maximum time ID available. Defaults to 365.
+    Returns:
+        dict: Dictionary with marketing campaign data.
+    """
     start = random.randint(1, max_time_id - 1)
     end = random.randint(start, max_time_id)
     segments = ["High Value", "At Risk", "New", "Promising"]
@@ -152,6 +218,19 @@ def simulate_all(
         n_tx: int = 300,
         n_campaigns: int = 5
 ) -> dict[str, pd.DataFrame]:
+    """
+    Simulate the entire database with generated data.
+    Args:
+        n_tables (int, optional): Number of tables to generate. Defaults to 10.
+        n_days (int, optional): Number of days for the time dimension. Defaults to 365.
+        n_menu_items (int, optional): Number of menu items to generate. Defaults to 50.
+        n_users (int, optional): Number of mobile users to generate. Defaults to 100.
+        n_nfc (int, optional): Number of NFC engagement events. Defaults to 100.
+        n_tx (int, optional): Number of transactions to generate. Defaults to 300.
+        n_campaigns (int, optional): Number of marketing campaigns to generate. Defaults to 5.
+    Returns:
+        dict[str, pd.DataFrame]: Dictionary of DataFrames for each table.
+    """
     # 1) build a shared pool of mobile_ids
     mobile_pool = [fake.uuid4() for _ in range(n_users)]
     dim_users   = [generate_dim_user(m) for m in mobile_pool]
