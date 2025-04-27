@@ -1,4 +1,6 @@
-
+"""
+ETL Process: Generate synthetic data, save to CSV, and load into database tables.
+"""
 
 import os
 import glob
@@ -50,6 +52,14 @@ for table_name, df in dfs.items():
 
 logger.info("Load the csv files into the tables")
 def load_csv_to_table(table_name: str, csv_path: str) -> None:
+    """
+    Load a CSV file into the specified database table.
+    Args:
+        table_name (str): The name of the target database table.
+        csv_path (str): The path to the CSV file.
+    Returns:
+        None
+    """
     df = pd.read_csv(csv_path)
     df.to_sql(table_name, con=engine, if_exists="append", index=False)
     logger.info(f"Loaded {len(df)} rows into table '{table_name}'")
