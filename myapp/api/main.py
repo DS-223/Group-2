@@ -51,3 +51,8 @@ def get_campaigns(db: Session = Depends(get_db)):
 @app.get("/users/", response_model=list[schemas.DimUserOut])
 def get_users(db: Session = Depends(get_db)):
     return crud.user_crud.get_all(db)
+
+@app.post("/rfm_segments/", response_model=schemas.RFMResultOut)
+def create_rfm_segment(rfm: schemas.RFMResultCreate, db: Session = Depends(get_db)):
+    db_rfm = crud.rfm_result_crud.create(db=db, obj_in=rfm)
+    return db_rfm

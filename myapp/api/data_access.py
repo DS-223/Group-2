@@ -54,7 +54,7 @@ class CRUDBase:
         Returns:
             Any: The newly created database record.
         """
-        db_obj = self.model(**obj_in)
+        db_obj = self.model(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
