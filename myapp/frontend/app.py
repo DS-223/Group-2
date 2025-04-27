@@ -5,7 +5,6 @@ import os
 import sqlalchemy as sql
 from dotenv import load_dotenv
 
-
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -14,13 +13,12 @@ if not DATABASE_URL:
 
 engine = sql.create_engine(DATABASE_URL, echo=True)
 
-
 st.set_page_config(page_title="SmartCRM", layout="wide")
-st.title("🍽 SmartCRM for Restaurants & Cafes in Armenia")
+st.title("SmartCRM: Analytical Platform for Restaurants and Cafes")
+
 
 @st.cache_data
 def load_data():
-
     menu = pd.read_sql("SELECT * FROM dim_menu_items", engine)
     tables = pd.read_sql("SELECT * FROM dim_tables", engine)
     time = pd.read_sql("SELECT * FROM dim_time", engine)
@@ -28,7 +26,6 @@ def load_data():
     trans = pd.read_sql("SELECT * FROM fact_transactions", engine)
     campaigns = pd.read_sql("SELECT * FROM marketing_campaigns", engine)
     nfc = pd.read_sql("SELECT * FROM nfc_engagements", engine)
-
     return menu, tables, time, trans_items, trans, campaigns, nfc
 
 menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
@@ -36,20 +33,35 @@ menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
 trans = trans.merge(time_df, on="time_id", how="left")
 trans["month"] = pd.to_numeric(trans["month"], errors="coerce")
 
-section = st.sidebar.radio("Go to", ["Dashboard", "Customer Segments", "Campaigns"])
+st.sidebar.markdown("## Navigation")
 
+if st.sidebar.button("Dashboard"):
+    st.session_state.section = "Dashboard"
+if st.sidebar.button("Customer Segments"):
+    st.session_state.section = "Customer Segments"
+if st.sidebar.button("Campaign Management"):
+    st.session_state.section = "Campaign Management"
+if st.sidebar.button("Menu Recommendation"):
+    st.session_state.section = "Menu Recommendation"
+
+if "section" not in st.session_state:
+    st.session_state.section = "Dashboard"
+
+section = st.session_state.section
+
+# ============================= DASHBOARD =======================================
 if section == "Dashboard":
-    st.subheader("📊 Reporting and Analysis")
+    st.subheader("Reporting and Analysis")
 
-    month_map = {
-        1: "January", 2: "February", 3: "March", 4: "April",
-        5: "May", 6: "June", 7: "July", 8: "August",
-        9: "September", 10: "October", 11: "November", 12: "December"
-    }
+    month_map = {i: name for i, name in enumerate([
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ], start=1)}
+
     available_months = sorted(trans["month"].dropna().unique().astype(int))
     month_names = [month_map[m] for m in available_months]
 
-    selected_name = st.selectbox("📅 Select Month", month_names)
+    selected_name = st.selectbox("Select Month", month_names)
     selected_month = [k for k, v in month_map.items() if v == selected_name][0]
     month_data = trans[trans["month"] == selected_month]
 
@@ -72,7 +84,7 @@ if section == "Dashboard":
     with col3:
         st.metric("Avg Check", f"${avg_check:,.2f}")
     with col4:
-        st.markdown("**Top Menu Items**")
+        st.markdown("**Top Menu Items:**")
         for item in top_items_grouped.index:
             st.markdown(f"- {item}")
 
@@ -159,13 +171,34 @@ if section == "Dashboard":
     else:
         st.warning("No NFC tag engagement data.")
 
+# ============================ CUSTOMER SEGMENTS ================================
 elif section == "Customer Segments":
-    st.subheader("📦 Customer Segmentation (RFM)")
+    st.subheader("Customer Segmentation (RFM)")
     st.info("Coming soon: RFM segments using Recency, Frequency, Monetary logic.")
 
-elif section == "Campaigns":
-    st.subheader("🎯 Campaign Management")
+# ============================= CAMPAIGNS ========================================
+elif section == "Campaign Management":
+    st.subheader("Campaign Management")
     if not campaigns.empty:
         st.dataframe(campaigns)
     else:
         st.warning("No campaigns data available.")
+
+# ======================== MENU ITEM RECOMMENDATION =============================
+elif section == "Menu Recommendation":
+    st.subheader("Menu Item Recommendation Based on Time of Day")
+
+    time_period = st.selectbox("Select Time Period", ["Breakfast", "Lunch", "Afternoon", "Dinner", "Late Night"])
+
+    st.info("Recommendations will be shown here based on the selected time period. (Coming Soon)")
+
+    if time_period == "Breakfast":
+        st.write("Example Recommendations: Croissant, Cappuccino, Omelette")
+    elif time_period == "Lunch":
+        st.write("Example Recommendations: Caesar Salad, Club Sandwich, Lemonade")
+    elif time_period == "Afternoon":
+        st.write("Example Recommendations: Smoothie, Pastry, Iced Coffee")
+    elif time_period == "Dinner":
+        st.write("Example Recommendations: Steak, Red Wine, Seasonal Soup")
+    elif time_period == "Late Night":
+        st.write("Example Recommendations: Nachos, Beer, Fries")
