@@ -1,3 +1,9 @@
+"""
+ORM Models for Database Tables.
+
+Defines the structure of dimension and fact tables using SQLAlchemy ORM.
+"""
+
 from sqlalchemy import Column, Integer, Numeric, String, Date, Boolean, Text, ForeignKey, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -6,6 +12,7 @@ from database import engine
 Base = declarative_base()
 
 class DimUser(Base):
+    """Dimension table representing users identified by mobile ID."""
     __tablename__ = "dim_users"
     mobile_id = Column(String, primary_key=True, comment="Hashed/anonymous device identifier")
     notes     = Column(Text)
@@ -14,6 +21,7 @@ class DimUser(Base):
     engagements  = relationship("NfcEngagement",  back_populates="user")
 
 class FactTransaction(Base):
+    """Fact table storing individual transactions made by users."""
     __tablename__ = "fact_transactions"
     transaction_id = Column(Integer, primary_key=True)
     mobile_id      = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
@@ -28,6 +36,7 @@ class FactTransaction(Base):
     items       = relationship("FactTransactionItem", back_populates="transaction")
 
 class FactTransactionItem(Base):
+    """Bridge table linking transactions with purchased menu items."""
     __tablename__ = "fact_transaction_items"
     transaction_id = Column(Integer, ForeignKey("fact_transactions.transaction_id"), primary_key=True)
     item_id        = Column(Integer, ForeignKey("dim_menu_items.item_id"),      primary_key=True)
@@ -38,6 +47,7 @@ class FactTransactionItem(Base):
     item            = relationship("DimMenuItem",       back_populates="transaction_items")
 
 class DimTable(Base):
+    """Dimension table representing dates and related time attributes."""
     __tablename__ = "dim_tables"
     table_id       = Column(Integer, primary_key=True)
     nfc_wifi_tag   = Column(String)
@@ -48,6 +58,7 @@ class DimTable(Base):
     engagements  = relationship("NfcEngagement",  back_populates="table")
 
 class DimTime(Base):
+    """Dimension table representing menu items and their details."""
     __tablename__ = "dim_time"
     time_id     = Column(Integer, primary_key=True)
     date        = Column(Date)
@@ -69,6 +80,7 @@ class DimTime(Base):
     )
 
 class DimMenuItem(Base):
+    """Fact table storing NFC engagements by users at tables."""
     __tablename__ = "dim_menu_items"
     item_id     = Column(Integer, primary_key=True)
     item_name   = Column(String)
@@ -90,6 +102,7 @@ class NfcEngagement(Base):
 
 
 class MarketingCampaign(Base):
+    """Dimension table representing marketing campaigns and their schedules."""
     __tablename__ = "marketing_campaigns"
     campaign_id    = Column(Integer, primary_key=True)
     name           = Column(String)
@@ -108,5 +121,23 @@ class MarketingCampaign(Base):
         back_populates="marketing_ends",
         foreign_keys=[end_time_id]
     )
+
+class RFMResult(Base):
+    """
+    Table storing RFM (Recency, Frequency, Monetary) scores and segments for users.
+    """
+    tablename = "rfm_results"
+    mobile_id     = Column(String, primary_key=True)
+    recency_days  = Column(Integer, nullable=False)
+    frequency     = Column(Integer, nullable=False)
+    monetary      = Column(Numeric, nullable=False)
+    R_score       = Column(Integer, nullable=False)
+    F_score       = Column(Integer, nullable=False)
+    M_score       = Column(Integer, nullable=False)
+    RFM_score     = Column(String, nullable=False)
+    Segment       = Column(String, nullable=False)
+
+    user = relationship("DimUser", back_populates="rfm_scores")
+
 
 Base.metadata.create_all(bind=engine)
