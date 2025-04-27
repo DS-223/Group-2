@@ -1,7 +1,7 @@
 # This is a gitignore file for Python projects.
 # Custom ignores
 feedback/*.md
-
+tasks/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
