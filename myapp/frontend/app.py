@@ -188,17 +188,41 @@ elif section == "Campaign Management":
 elif section == "Menu Recommendation":
     st.subheader("Menu Item Recommendation Based on Time of Day")
 
-    time_period = st.selectbox("Select Time Period", ["Breakfast", "Lunch", "Afternoon", "Dinner", "Late Night"])
+    time_period = st.selectbox("Select Time Period", [
+        "Early Breakfast (04:00–06:29)",
+        "Standard Breakfast (06:30–10:29)",
+        "Late Breakfast / Brunch (10:30–12:29)",
+        "Lunch (12:30–14:29)",
+        "Late Lunch (14:30–16:29)",
+        "Afternoon Tea / Snack (16:30–17:59)",
+        "Early Dinner (18:00–19:29)",
+        "Standard Dinner (19:30–21:29)",
+        "Late Dinner / Supper (21:30–23:59)",
+        "Midnight Snack (00:00–01:59)",
+        "Closed / No Service (02:00–03:59)"
+    ])
 
     st.info("Recommendations will be shown here based on the selected time period. (Coming Soon)")
 
-    if time_period == "Breakfast":
-        st.write("Example Recommendations: Croissant, Cappuccino, Omelette")
-    elif time_period == "Lunch":
-        st.write("Example Recommendations: Caesar Salad, Club Sandwich, Lemonade")
-    elif time_period == "Afternoon":
-        st.write("Example Recommendations: Smoothie, Pastry, Iced Coffee")
-    elif time_period == "Dinner":
-        st.write("Example Recommendations: Steak, Red Wine, Seasonal Soup")
-    elif time_period == "Late Night":
-        st.write("Example Recommendations: Nachos, Beer, Fries")
+    if "Early Breakfast" in time_period:
+        st.write("Example Recommendations: Light toast, green tea, fruit bowl")
+    elif "Standard Breakfast" in time_period:
+        st.write("Example Recommendations: Eggs Benedict, orange juice, coffee")
+    elif "Late Breakfast" in time_period:
+        st.write("Example Recommendations: Pancakes, latte, smoothie bowl")
+    elif "Lunch (" in time_period:
+        st.write("Example Recommendations: Grilled chicken wrap, lemonade, salad")
+    elif "Late Lunch" in time_period:
+        st.write("Example Recommendations: Quiche, iced tea, fruit")
+    elif "Afternoon Tea" in time_period:
+        st.write("Example Recommendations: Cupcakes, black tea, macarons")
+    elif "Early Dinner" in time_period:
+        st.write("Example Recommendations: Pasta, house wine, garden salad")
+    elif "Standard Dinner" in time_period:
+        st.write("Example Recommendations: Steak, red wine, roasted vegetables")
+    elif "Late Dinner" in time_period:
+        st.write("Example Recommendations: Sushi rolls, beer, ramen")
+    elif "Midnight Snack" in time_period:
+        st.write("Example Recommendations: Nachos, hot chocolate, fries")
+    elif "Closed" in time_period:
+        st.warning("Kitchen is closed during this time. No service available.")
