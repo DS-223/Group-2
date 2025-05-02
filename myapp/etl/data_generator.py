@@ -1,11 +1,7 @@
-"""
-Data generation functions for simulating a café's customer, menu, transactions, and marketing activities.
-"""
-
 from faker import Faker
 import pandas as pd
 import random
-from datetime import datetime
+from datetime import datetime, time
 from loguru import logger
 
 fake = Faker()
@@ -88,25 +84,13 @@ def generate_dim_menu_item(item_id: int) -> dict:
         "Non‑Alcoholic": ["Sparkling Water", "Lemonade", "Iced Tea", "Soft Drink"],
         "Specialty": ["Affogato", "Turkish Coffee", "Matcha Latte", "Chai Latte"]
     }
-
-    # Select category and item name
     category = random.choice(list(menu_catalog.keys()))
     item_name = random.choice(menu_catalog[category])
-
-    # Define base price ranges by category
     price_ranges = {
-        "Coffee": (2.5, 5.0),
-        "Tea": (1.5, 4.0),
-        "Pastry": (1.0, 3.5),
-        "Sandwich": (4.0, 8.0),
-        "Smoothie": (3.5, 6.5),
-        "Juice": (2.5, 5.0),
-        "Salad": (3.5, 7.0),
-        "Soup": (3.0, 6.0),
-        "Breakfast": (5.0, 10.0),
-        "Snack": (1.0, 4.0),
-        "Alcohol": (4.0, 12.0),
-        "Non‑Alcoholic": (1.0, 3.0),
+        "Coffee": (2.5, 5.0), "Tea": (1.5, 4.0), "Pastry": (1.0, 3.5),
+        "Sandwich": (4.0, 8.0), "Smoothie": (3.5, 6.5), "Juice": (2.5, 5.0),
+        "Salad": (3.5, 7.0), "Soup": (3.0, 6.0), "Breakfast": (5.0, 10.0),
+        "Snack": (1.0, 4.0), "Alcohol": (4.0, 12.0), "Non-Alcoholic": (1.0, 3.0),
         "Specialty": (3.0, 7.0)
     }
     low, high = price_ranges.get(category, (2.0, 6.0))
@@ -208,12 +192,30 @@ def generate_marketing_campaign(campaign_id: int, max_time_id: int = 365) -> dic
     }
 
 
+def generate_dim_menu_daytimes() -> list[dict]:
+    """
+    Hard-coded daytime definitions (dim_menu_daytimes).
+    """
+    return [
+        {"daytime_id":  1, "daytime_label": "Early Breakfast",         "start_time": time(4,  0), "end_time": time(6, 29)},
+        {"daytime_id":  2, "daytime_label": "Standard Breakfast",      "start_time": time(6, 30), "end_time": time(10,29)},
+        {"daytime_id":  3, "daytime_label": "Late Breakfast / Brunch", "start_time": time(10,30),"end_time": time(12,29)},
+        {"daytime_id":  4, "daytime_label": "Lunch",                   "start_time": time(12,30),"end_time": time(14,29)},
+        {"daytime_id":  5, "daytime_label": "Late Lunch",              "start_time": time(14,30),"end_time": time(16,29)},
+        {"daytime_id":  6, "daytime_label": "Afternoon Tea / Snack",   "start_time": time(16,30),"end_time": time(17,59)},
+        {"daytime_id":  7, "daytime_label": "Early Dinner",            "start_time": time(18, 0), "end_time": time(19,29)},
+        {"daytime_id":  8, "daytime_label": "Standard Dinner",         "start_time": time(19,30),"end_time": time(21,29)},
+        {"daytime_id":  9, "daytime_label": "Late Dinner / Supper",    "start_time": time(21,30),"end_time": time(23,59)},
+        {"daytime_id": 10, "daytime_label": "Midnight Snack",          "start_time": time(0,  0), "end_time": time(1, 59)},
+        {"daytime_id": 11, "daytime_label": "Closed / No Service",     "start_time": time(2,  0), "end_time": time(3, 59)},
+    ]
+
 
 def simulate_all(
         n_tables: int = 10,
         n_days: int = 365,
         n_menu_items: int = 50,
-        n_users: int = 100,          # ← new
+        n_users: int = 100,
         n_nfc: int = 100,
         n_tx: int = 300,
         n_campaigns: int = 5
@@ -235,20 +237,20 @@ def simulate_all(
     mobile_pool = [fake.uuid4() for _ in range(n_users)]
     dim_users   = [generate_dim_user(m) for m in mobile_pool]
 
-    # 2) generate existing dims
-    dim_tables = [generate_dim_table(i) for i in range(1, n_tables + 1)]
-    dim_time   = [generate_dim_time(i)  for i in range(1, n_days   + 1)]
-    dim_menu   = [generate_dim_menu_item(i) for i in range(1, n_menu_items + 1)]
+    # 2) dims
+    dim_tables  = [generate_dim_table(i) for i in range(1, n_tables + 1)]
+    dim_time    = [generate_dim_time(i)  for i in range(1, n_days   + 1)]
+    dim_menu    = [generate_dim_menu_item(i) for i in range(1, n_menu_items + 1)]
+    dim_daytimes = generate_dim_menu_daytimes()
 
-    # 3) engagements & txs now draw from the same pool
+    # 3) interactions & transactions
     nfc_events   = [generate_nfc_engagement(i, mobile_pool) for i in range(1, n_nfc + 1)]
     transactions = [generate_fact_transaction(i, mobile_pool)     for i in range(1, n_tx  + 1)]
 
     # 4) bridge table
     txn_items = []
     for tx in transactions:
-        chosen_items = random.sample(range(1, n_menu_items + 1), random.randint(1, 3))
-        for item_id in chosen_items:
+        for item_id in random.sample(range(1, n_menu_items + 1), random.randint(1, 3)):
             txn_items.append(generate_fact_transaction_item(tx["transaction_id"], item_id))
 
     # 5) campaigns
@@ -256,10 +258,11 @@ def simulate_all(
 
     # 6) pack into DataFrames
     dfs = {
-        "dim_users":              pd.DataFrame(dim_users),            # ← new
+        "dim_users":              pd.DataFrame(dim_users),
         "dim_tables":             pd.DataFrame(dim_tables),
         "dim_time":               pd.DataFrame(dim_time),
         "dim_menu_items":         pd.DataFrame(dim_menu),
+        "dim_menu_daytimes":      pd.DataFrame(dim_daytimes),
         "nfc_engagements":        pd.DataFrame(nfc_events),
         "fact_transactions":      pd.DataFrame(transactions),
         "fact_transaction_items": pd.DataFrame(txn_items),
