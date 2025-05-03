@@ -44,6 +44,14 @@ dfs = simulate_all(
 )
 # === ORM-based data loader ===
 def load_data():
+    """
+    Loads synthetic data into the database using SQLAlchemy ORM models.
+
+    This function:
+    - Converts pandas DataFrames into SQLAlchemy model objects
+    - Performs bulk inserts for each table
+    - Commits the session or rolls back on failure
+    """
     logger.info("Starting data loading using SQLAlchemy models…")
     db: Session = SessionLocal()
 
