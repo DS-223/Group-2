@@ -97,3 +97,12 @@ services:
     healthcheck:
       test: "exit 0"
 
+  notebook:
+    build:
+      context: ./notebook
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebook:/notebook
+    container_name: jupyter_notebook
