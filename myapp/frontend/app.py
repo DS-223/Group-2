@@ -1,17 +1,9 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-import os
-import sqlalchemy as sql
-from dotenv import load_dotenv
+import requests
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL is not set in .env")
-
-engine = sql.create_engine(DATABASE_URL, echo=True)
+API_BASE = "http://api:8000/api"
 
 st.set_page_config(page_title="SmartCRM", layout="wide")
 st.markdown(
@@ -49,19 +41,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-
 @st.cache_data
 def load_data():
-    menu = pd.read_sql("SELECT * FROM dim_menu_items", engine)
-    tables = pd.read_sql("SELECT * FROM dim_tables", engine)
-    time = pd.read_sql("SELECT * FROM dim_time", engine)
-    trans_items = pd.read_sql("SELECT * FROM fact_transaction_items", engine)
-    trans = pd.read_sql("SELECT * FROM fact_transactions", engine)
-    campaigns = pd.read_sql("SELECT * FROM marketing_campaigns", engine)
-    nfc = pd.read_sql("SELECT * FROM nfc_engagements", engine)
-    return menu, tables, time, trans_items, trans, campaigns, nfc
+    # Fetch from API
+    menu = pd.DataFrame(requests.get(f"{API_BASE}/dim_menu_items/").json())
+    tables = pd.DataFrame(requests.get(f"{API_BASE}/dim_tables/").json())
+    time_df = pd.DataFrame(requests.get(f"{API_BASE}/dim_time/").json())
+    trans_items = pd.DataFrame(requests.get(f"{API_BASE}/fact_transaction_items/").json())
+    trans = pd.DataFrame(requests.get(f"{API_BASE}/transactions/").json())
+    campaigns = pd.DataFrame(requests.get(f"{API_BASE}/campaigns/").json())
+    nfc = pd.DataFrame(requests.get(f"{API_BASE}/nfc_engagements/").json())
+
+    return menu, tables, time_df, trans_items, trans, campaigns, nfc
 
 menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
+
+
 
 trans = trans.merge(time_df, on="time_id", how="left")
 trans["month"] = pd.to_numeric(trans["month"], errors="coerce")
@@ -95,7 +90,7 @@ if section == "Dashboard":
     month_names = [month_map[m] for m in available_months]
 
     selected_name = st.selectbox("Select Month", month_names)
-    selected_month = [k for k, v in month_map.items() if v == selected_name][0]
+    selected_month = next((k for k, v in month_map.items() if v == selected_name), None)
     month_data = trans[trans["month"] == selected_month]
 
     st.markdown(f"<h3 style='font-family: Georgia, serif;'>Overview – {selected_name}</h3>", unsafe_allow_html=True)
@@ -104,10 +99,10 @@ if section == "Dashboard":
     num_transactions = month_data["transaction_id"].nunique()
     avg_check = month_data["total_amount"].mean()
 
-    top_items = trans_items.merge(menu[["item_id", "item_name"]], on="item_id", how="left")
+    top_items = trans_items.merge(menu[["item_id", "menu_item_name"]], on="item_id", how="left")
     top_items = top_items.merge(trans[["transaction_id", "month"]], on="transaction_id")
     top_items = top_items[top_items["month"] == selected_month]
-    top_items_grouped = top_items.groupby("item_name")["quantity"].sum().sort_values(ascending=False).head(3)
+    top_items_grouped = top_items.groupby("menu_item_name")["quantity"].sum().sort_values(ascending=False).head(3)
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -152,11 +147,11 @@ if section == "Dashboard":
 
     st.markdown("<h3 style='font-family: Georgia, serif;'>Menu Performance & Monthly Sales</h3>",
                 unsafe_allow_html=True)
-    perf = trans_items.merge(menu[["item_id", "item_name"]], on="item_id", how="left")
+    perf = trans_items.merge(menu[["item_id", "menu_item_name"]], on="item_id", how="left")
     perf = perf.merge(trans[["transaction_id", "month"]], on="transaction_id", how="left")
     perf = perf[perf["month"] == selected_month]
     perf["total_price"] = perf["price"] * perf["quantity"]
-    menu_summary = perf.groupby("item_name").agg(
+    menu_summary = perf.groupby("menu_item_name").agg(
         Total_Sales=pd.NamedAgg(column="total_price", aggfunc="sum"),
         Avg_Price=pd.NamedAgg(column="price", aggfunc="mean")
     ).sort_values("Total_Sales", ascending=False).reset_index()
