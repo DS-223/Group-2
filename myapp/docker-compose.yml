@@ -34,16 +34,16 @@ services:
   etl:
     container_name: etl
     build:
-      context: ./etl
+      context: api/
       dockerfile: Dockerfile
-    image: myapp_etl:latest # to avoid conflicts with other images
     ports:
       - 3000:3000
     volumes:
-        - ./etl:/etl
+      - ./api:/api
     depends_on:
       db:
         condition: service_healthy
+    command: python -m api.etl.etl_process
     healthcheck:
       test: "exit 0"
 
