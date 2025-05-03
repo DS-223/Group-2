@@ -16,4 +16,4 @@ COPY . .
 
 EXPOSE 3030
 
-CMD ["python", "modeling.py"]
+CMD ["python", "main.py"]
