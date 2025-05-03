@@ -1,10 +1,4 @@
-"""
-ORM Models for Database Tables.
-
-Defines the structure of dimension and fact tables using SQLAlchemy ORM.
-"""
-
-from sqlalchemy import Column, Integer, Numeric, String, Date, Boolean, Text, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, Numeric, String, Date, Boolean, Text, ForeignKey, TIMESTAMP, Time
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from database import engine
@@ -12,9 +6,7 @@ from database import engine
 Base = declarative_base()
 
 class DimUser(Base):
-    """Dimension table representing users identified by mobile ID."""
     __tablename__ = "dim_users"
-    
     mobile_id = Column(String, primary_key=True, comment="Hashed or anonymized device identifier")
     notes     = Column(Text, comment="Optional metadata, e.g., OS, browser type")
 
@@ -22,42 +14,8 @@ class DimUser(Base):
     engagements  = relationship("NfcEngagement", back_populates="user")
     rfm_segments = relationship("RFMResult", back_populates="user")
 
-
-class FactTransaction(Base):
-    """Fact table storing individual transactions made by users."""
-    __tablename__ = "fact_transactions"
-    
-    transaction_id = Column(Integer, primary_key=True)
-    mobile_id      = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
-    table_id       = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
-    time_id        = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
-    total_amount   = Column(Numeric)
-    created_at     = Column(TIMESTAMP)
-
-    user  = relationship("DimUser", back_populates="transactions")
-    table = relationship("DimTable", back_populates="transactions")
-    time  = relationship("DimTime", back_populates="transactions")
-    items = relationship("FactTransactionItem", back_populates="transaction")
-
-
-class FactTransactionItem(Base):
-    """Bridge table linking transactions to purchased menu items."""
-    __tablename__ = "fact_transaction_items"
-    
-    transaction_id = Column(Integer, ForeignKey("fact_transactions.transaction_id"), primary_key=True)
-    item_id        = Column(Integer, ForeignKey("dim_menu_items.item_id"), primary_key=True)
-    quantity       = Column(Integer)
-    price          = Column(Numeric, comment="Price at time of transaction")
-
-    transaction = relationship("FactTransaction", back_populates="items")
-    item        = relationship("DimMenuItem", back_populates="transaction_items")
-
-
-
 class DimTable(Base):
-    """Dimension table representing physical tables and their NFC tags."""
     __tablename__ = "dim_tables"
-    
     table_id       = Column(Integer, primary_key=True)
     nfc_wifi_tag   = Column(String)
     nfc_menu_tag   = Column(String)
@@ -66,11 +24,8 @@ class DimTable(Base):
     transactions = relationship("FactTransaction", back_populates="table")
     engagements  = relationship("NfcEngagement", back_populates="table")
 
-
 class DimTime(Base):
-    """Dimension table representing calendar dates and related attributes."""
     __tablename__ = "dim_time"
-    
     time_id     = Column(Integer, primary_key=True)
     date        = Column(Date)
     day_of_week = Column(String)
@@ -82,23 +37,18 @@ class DimTime(Base):
     marketing_starts = relationship("MarketingCampaign", back_populates="start_time", foreign_keys="[MarketingCampaign.start_time_id]")
     marketing_ends   = relationship("MarketingCampaign", back_populates="end_time", foreign_keys="[MarketingCampaign.end_time_id]")
 
-
 class DimMenuItem(Base):
-    """Dimension table representing menu items available for purchase."""
     __tablename__ = "dim_menu_items"
-    
     item_id   = Column(Integer, primary_key=True)
     item_name = Column(String)
     price     = Column(Numeric)
     category  = Column(String)
 
     transaction_items = relationship("FactTransactionItem", back_populates="item")
-
+    recommendations   = relationship("MenuRecommendation", back_populates="menu_item")
 
 class NfcEngagement(Base):
-    """Fact table recording user NFC engagements with table tags."""
     __tablename__ = "nfc_engagements"
-    
     engagement_id   = Column(Integer, primary_key=True)
     mobile_id       = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
     table_id        = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
@@ -108,11 +58,8 @@ class NfcEngagement(Base):
     user  = relationship("DimUser", back_populates="engagements")
     table = relationship("DimTable", back_populates="engagements")
 
-
 class MarketingCampaign(Base):
-    """Dimension table representing marketing campaigns and their schedules."""
     __tablename__ = "marketing_campaigns"
-    
     campaign_id    = Column(Integer, primary_key=True)
     name           = Column(String)
     start_time_id  = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
@@ -123,11 +70,8 @@ class MarketingCampaign(Base):
     start_time = relationship("DimTime", back_populates="marketing_starts", foreign_keys=[start_time_id])
     end_time   = relationship("DimTime", back_populates="marketing_ends", foreign_keys=[end_time_id])
 
-
 class RFMResult(Base):
-    """Fact table storing RFM (Recency, Frequency, Monetary) segmentation results."""
     __tablename__ = "rfm_segments"
-    
     rfm_id        = Column(Integer, primary_key=True, comment="Generated primary key")
     mobile_id     = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
     recency_days  = Column(Integer, nullable=False)
@@ -142,5 +86,47 @@ class RFMResult(Base):
 
     user = relationship("DimUser", back_populates="rfm_segments")
 
+class FactTransaction(Base):
+    __tablename__ = "fact_transactions"
+    transaction_id = Column(Integer, primary_key=True)
+    mobile_id      = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
+    table_id       = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
+    time_id        = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
+    total_amount   = Column(Numeric)
+    created_at     = Column(TIMESTAMP)
+
+    user  = relationship("DimUser", back_populates="transactions")
+    table = relationship("DimTable", back_populates="transactions")
+    time  = relationship("DimTime", back_populates="transactions")
+    items = relationship("FactTransactionItem", back_populates="transaction")
+
+class FactTransactionItem(Base):
+    __tablename__ = "fact_transaction_items"
+    transaction_id = Column(Integer, ForeignKey("fact_transactions.transaction_id"), primary_key=True)
+    item_id        = Column(Integer, ForeignKey("dim_menu_items.item_id"), primary_key=True)
+    quantity       = Column(Integer)
+    price          = Column(Numeric, comment="Price at time of transaction")
+
+    transaction = relationship("FactTransaction", back_populates="items")
+    item        = relationship("DimMenuItem", back_populates="transaction_items")
+
+class DimMenuDaytime(Base):
+    __tablename__ = "dim_menu_daytimes"
+    daytime_id    = Column(Integer, primary_key=True)
+    daytime_label = Column(String, nullable=False)
+    start_time    = Column(Time, nullable=False)
+    end_time      = Column(Time, nullable=False)
+
+    recommendations = relationship("MenuRecommendation", back_populates="daytime")
+
+class MenuRecommendation(Base):
+    __tablename__ = "menu_recommendations"
+    id           = Column(Integer, primary_key=True)
+    menu_item_id = Column(Integer, ForeignKey("dim_menu_items.item_id"), nullable=False)
+    daytime_id   = Column(Integer, ForeignKey("dim_menu_daytimes.daytime_id"), nullable=False)
+    rank         = Column(Integer)
+
+    menu_item = relationship("DimMenuItem", back_populates="recommendations")
+    daytime   = relationship("DimMenuDaytime", back_populates="recommendations")
 
 Base.metadata.create_all(bind=engine)
