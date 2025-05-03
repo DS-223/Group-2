@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 # Set up paths and imports
-sys.path.append(os.path.dirname(file))
+sys.path.append(os.path.dirname(__file__)) ####### DONT FORGET __file__ IN CASE of COPY  PASTE
 from data_generator import simulate_all
 
 # 👇 Import your models & DB session
@@ -17,7 +17,7 @@ from database import SessionLocal, engine
 import models
 
 # 🔑 Load DB connection string
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(file), '.env'))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
@@ -38,12 +38,10 @@ dfs = simulate_all(
     n_tables=N_TABLES,
     n_days=N_DAYS,
     n_menu_items=N_MENU_ITEMS,
-    n_users=N_USERS,
     n_nfc=N_NFC,
     n_tx=N_TRANSACTIONS,
     n_campaigns=N_CAMPAIGNS
 )
-
 # === ORM-based data loader ===
 def load_data():
     logger.info("Starting data loading using SQLAlchemy models…")
@@ -107,5 +105,5 @@ def load_data():
         logger.info("Database session closed.")
 
 # === Run loader ===
-if name == "main":
+if __name__ == "__main__":
     load_data()

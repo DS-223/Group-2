@@ -98,7 +98,7 @@ def generate_dim_menu_item(item_id: int) -> dict:
 
     return {
         "item_id": item_id,
-        "item_name": item_name,
+        "menu_item_name": item_name,
         "price": price,
         "category": category
     }
