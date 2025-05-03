@@ -1,132 +1,149 @@
-from sqlalchemy import Column, Integer, Numeric, String, Date, Boolean, Text, ForeignKey, TIMESTAMP, Time
-from sqlalchemy.ext.declarative import declarative_base
+# models.py
+
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Time, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from database import engine
+from sqlalchemy.sql import func
+from database import Base  # Assuming you have Base from declarative_base()
 
-Base = declarative_base()
+# ---------- Fact Transactions ----------
+class FactTransaction(Base):
+    __tablename__ = "fact_transactions"
 
+    transaction_id = Column(Integer, primary_key=True, index=True)
+    mobile_id = Column(String, ForeignKey("dim_users.mobile_id"))
+    table_id = Column(Integer, ForeignKey("dim_tables.table_id"))
+    time_id = Column(Integer, ForeignKey("dim_time.time_id"))
+    total_amount = Column(Float)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    items = relationship("FactTransactionItem", back_populates="transaction")
+    user = relationship("DimUser", back_populates="transactions")
+
+
+# ---------- Fact Transaction Items ----------
+class FactTransactionItem(Base):
+    __tablename__ = "fact_transaction_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    transaction_id = Column(Integer, ForeignKey("fact_transactions.transaction_id"))
+    item_id = Column(Integer, ForeignKey("dim_menu_items.item_id"))
+    quantity = Column(Integer)
+    price = Column(Float)
+
+    transaction = relationship("FactTransaction", back_populates="items")
+    menu_item = relationship("DimMenuItem")
+
+
+# ---------- Dim Menu Daytimes ----------
+class DimMenuDaytime(Base):
+    __tablename__ = "dim_menu_daytimes"
+
+    daytime_id = Column(Integer, primary_key=True, index=True)
+    daytime_label = Column(String, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+
+
+# ---------- Menu Recommendations ----------
+class MenuRecommendation(Base):
+    __tablename__ = "menu_recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    menu_item_id = Column(Integer, ForeignKey("dim_menu_items.item_id"))
+    daytime_id = Column(Integer, ForeignKey("dim_menu_daytimes.daytime_id"))
+    rank = Column(Integer)
+
+    menu_item = relationship("DimMenuItem")
+    daytime = relationship("DimMenuDaytime")
+
+
+# ---------- Dim Users ----------
 class DimUser(Base):
     __tablename__ = "dim_users"
-    mobile_id = Column(String, primary_key=True, comment="Hashed or anonymized device identifier")
-    notes     = Column(Text, comment="Optional metadata, e.g., OS, browser type")
+
+    mobile_id = Column(String, primary_key=True, index=True)
+    notes = Column(Text, nullable=True)
 
     transactions = relationship("FactTransaction", back_populates="user")
-    engagements  = relationship("NfcEngagement", back_populates="user")
-    rfm_segments = relationship("RFMResult", back_populates="user")
+    engagements = relationship("NfcEngagement", back_populates="user")
+    rfm_segments = relationship("RfmSegment", back_populates="user")
 
-class DimTable(Base):
-    __tablename__ = "dim_tables"
-    table_id       = Column(Integer, primary_key=True)
-    nfc_wifi_tag   = Column(String)
-    nfc_menu_tag   = Column(String)
-    nfc_review_tag = Column(String)
 
-    transactions = relationship("FactTransaction", back_populates="table")
-    engagements  = relationship("NfcEngagement", back_populates="table")
-
-class DimTime(Base):
-    __tablename__ = "dim_time"
-    time_id     = Column(Integer, primary_key=True)
-    date        = Column(Date)
-    day_of_week = Column(String)
-    month       = Column(Integer)
-    year        = Column(Integer)
-    is_weekend  = Column(Boolean)
-
-    transactions     = relationship("FactTransaction", back_populates="time")
-    marketing_starts = relationship("MarketingCampaign", back_populates="start_time", foreign_keys="[MarketingCampaign.start_time_id]")
-    marketing_ends   = relationship("MarketingCampaign", back_populates="end_time", foreign_keys="[MarketingCampaign.end_time_id]")
-
-class DimMenuItem(Base):
-    __tablename__ = "dim_menu_items"
-    item_id   = Column(Integer, primary_key=True)
-    item_name = Column(String)
-    price     = Column(Numeric)
-    category  = Column(String)
-
-    transaction_items = relationship("FactTransactionItem", back_populates="item")
-    recommendations   = relationship("MenuRecommendation", back_populates="menu_item")
-
-class NfcEngagement(Base):
-    __tablename__ = "nfc_engagements"
-    engagement_id   = Column(Integer, primary_key=True)
-    mobile_id       = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
-    table_id        = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
-    tag_type        = Column(String, comment="WiFi, Menu, Review")
-    engagement_time = Column(TIMESTAMP)
-
-    user  = relationship("DimUser", back_populates="engagements")
-    table = relationship("DimTable", back_populates="engagements")
-
-class MarketingCampaign(Base):
-    __tablename__ = "marketing_campaigns"
-    campaign_id    = Column(Integer, primary_key=True)
-    name           = Column(String)
-    start_time_id  = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
-    end_time_id    = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
-    target_segment = Column(String, ForeignKey("rfm_segments.segment"), nullable=False, comment="Matches rfm_segments.segment")
-    description    = Column(Text)
-
-    start_time = relationship("DimTime", back_populates="marketing_starts", foreign_keys=[start_time_id])
-    end_time   = relationship("DimTime", back_populates="marketing_ends", foreign_keys=[end_time_id])
-
-class RFMResult(Base):
+# ---------- RFM Segments ----------
+class RfmSegment(Base):
     __tablename__ = "rfm_segments"
-    rfm_id        = Column(Integer, primary_key=True, comment="Generated primary key")
-    mobile_id     = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
-    recency_days  = Column(Integer, nullable=False)
-    frequency     = Column(Integer, nullable=False)
-    monetary      = Column(Numeric, nullable=False)
-    R_score       = Column(Integer, nullable=False)
-    F_score       = Column(Integer, nullable=False)
-    M_score       = Column(Integer, nullable=False)
-    RFM_score     = Column(String, nullable=False)
-    segment       = Column(String, nullable=False)
-    date_created  = Column(TIMESTAMP, nullable=False)
+
+    rfm_id = Column(Integer, primary_key=True, index=True)
+    mobile_id = Column(String, ForeignKey("dim_users.mobile_id"))
+    recency_days = Column(Integer)
+    frequency = Column(Integer)
+    monetary = Column(Float)
+    R_score = Column(Integer)
+    F_score = Column(Integer)
+    M_score = Column(Integer)
+    RFM_score = Column(String)
+    segment = Column(String)
+    date_created = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("DimUser", back_populates="rfm_segments")
 
-class FactTransaction(Base):
-    __tablename__ = "fact_transactions"
-    transaction_id = Column(Integer, primary_key=True)
-    mobile_id      = Column(String, ForeignKey("dim_users.mobile_id"), nullable=False)
-    table_id       = Column(Integer, ForeignKey("dim_tables.table_id"), nullable=False)
-    time_id        = Column(Integer, ForeignKey("dim_time.time_id"), nullable=False)
-    total_amount   = Column(Numeric)
-    created_at     = Column(TIMESTAMP)
 
-    user  = relationship("DimUser", back_populates="transactions")
-    table = relationship("DimTable", back_populates="transactions")
-    time  = relationship("DimTime", back_populates="transactions")
-    items = relationship("FactTransactionItem", back_populates="transaction")
+# ---------- Marketing Campaigns ----------
+class MarketingCampaign(Base):
+    __tablename__ = "marketing_campaigns"
 
-class FactTransactionItem(Base):
-    __tablename__ = "fact_transaction_items"
-    transaction_id = Column(Integer, ForeignKey("fact_transactions.transaction_id"), primary_key=True)
-    item_id        = Column(Integer, ForeignKey("dim_menu_items.item_id"), primary_key=True)
-    quantity       = Column(Integer)
-    price          = Column(Numeric, comment="Price at time of transaction")
+    campaign_id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    start_time_id = Column(Integer, ForeignKey("dim_time.time_id"))
+    end_time_id = Column(Integer, ForeignKey("dim_time.time_id"))
+    target_segment = Column(String)
+    description = Column(Text, nullable=True)
 
-    transaction = relationship("FactTransaction", back_populates="items")
-    item        = relationship("DimMenuItem", back_populates="transaction_items")
+    start_time = relationship("DimTime", foreign_keys=[start_time_id])
+    end_time = relationship("DimTime", foreign_keys=[end_time_id])
 
-class DimMenuDaytime(Base):
-    __tablename__ = "dim_menu_daytimes"
-    daytime_id    = Column(Integer, primary_key=True)
-    daytime_label = Column(String, nullable=False)
-    start_time    = Column(Time, nullable=False)
-    end_time      = Column(Time, nullable=False)
 
-    recommendations = relationship("MenuRecommendation", back_populates="daytime")
+# ---------- Dim Time ----------
+class DimTime(Base):
+    __tablename__ = "dim_time"
 
-class MenuRecommendation(Base):
-    __tablename__ = "menu_recommendations"
-    id           = Column(Integer, primary_key=True)
-    menu_item_id = Column(Integer, ForeignKey("dim_menu_items.item_id"), nullable=False)
-    daytime_id   = Column(Integer, ForeignKey("dim_menu_daytimes.daytime_id"), nullable=False)
-    rank         = Column(Integer)
+    time_id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date)
+    day_of_week = Column(String)
+    month = Column(Integer)
+    year = Column(Integer)
+    is_weekend = Column(Boolean)
 
-    menu_item = relationship("DimMenuItem", back_populates="recommendations")
-    daytime   = relationship("DimMenuDaytime", back_populates="recommendations")
 
-Base.metadata.create_all(bind=engine)
+# ---------- Dim Tables ----------
+class DimTable(Base):
+    __tablename__ = "dim_tables"
+
+    table_id = Column(Integer, primary_key=True, index=True)
+    nfc_wifi_tag = Column(String, nullable=True)
+    nfc_menu_tag = Column(String, nullable=True)
+    nfc_review_tag = Column(String, nullable=True)
+
+
+# ---------- NFC Engagements ----------
+class NfcEngagement(Base):
+    __tablename__ = "nfc_engagements"
+
+    engagement_id = Column(Integer, primary_key=True, index=True)
+    mobile_id = Column(String, ForeignKey("dim_users.mobile_id"))
+    table_id = Column(Integer, ForeignKey("dim_tables.table_id"))
+    tag_type = Column(String)
+    engagement_time = Column(DateTime)
+
+    user = relationship("DimUser", back_populates="engagements")
+    table = relationship("DimTable")
+
+
+# ---------- Dim Menu Items ----------
+class DimMenuItem(Base):
+    __tablename__ = "dim_menu_items"
+
+    item_id = Column(Integer, primary_key=True, index=True)
+    menu_item_name = Column(String)
+    price = Column(Float)
+    category = Column(String)
