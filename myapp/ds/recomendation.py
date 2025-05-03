@@ -17,6 +17,7 @@ def run_menu_recommendations():
     items     = requests.get(TXN_ITEMS_ENDPOINT).json()
     daytimes  = requests.get(DAYTIMES_ENDPOINT).json()
 
+
     df_txns     = pd.DataFrame(txns)
     df_items    = pd.DataFrame(items)
     df_daytimes = pd.DataFrame(daytimes)
