@@ -14,7 +14,40 @@ if not DATABASE_URL:
 engine = sql.create_engine(DATABASE_URL, echo=True)
 
 st.set_page_config(page_title="SmartCRM", layout="wide")
-st.title("SmartCRM: Analytical Platform for Restaurants and Cafes")
+st.markdown(
+    """
+    <div style='text-align: center;'>
+        <h1>
+        <span style="color:#888888;">Smart</span><span style="color:#EA4335;">C</span><span style="color:#FBBC05;">R</span><span style="color:#4285F4;">M</span>
+        </h1>
+        <h3 style="color:#555555;">Analytical Platform for Restaurants and Cafes</h3>
+        </h3>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown("""
+    <style>
+    html, body, [class*="css"] {
+        font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+    }
+    .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #2C2C2C;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .info-box {
+        background-color: #EAF1FB;
+        padding: 1em;
+        border-radius: 10px;
+        color: #1a3b6d;
+        font-size: 16px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 
 @st.cache_data
@@ -51,7 +84,7 @@ section = st.session_state.section
 
 # ============================= DASHBOARD =======================================
 if section == "Dashboard":
-    st.subheader("Reporting and Analysis")
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Reporting and Analysis</h2>", unsafe_allow_html=True)
 
     month_map = {i: name for i, name in enumerate([
         "January", "February", "March", "April", "May", "June",
@@ -65,7 +98,7 @@ if section == "Dashboard":
     selected_month = [k for k, v in month_map.items() if v == selected_name][0]
     month_data = trans[trans["month"] == selected_month]
 
-    st.markdown(f"### Overview – {selected_name}")
+    st.markdown(f"<h3 style='font-family: Georgia, serif;'>Overview – {selected_name}</h3>", unsafe_allow_html=True)
 
     total_sales = month_data["total_amount"].sum()
     num_transactions = month_data["transaction_id"].nunique()
@@ -88,7 +121,8 @@ if section == "Dashboard":
         for item in top_items_grouped.index:
             st.markdown(f"- {item}")
 
-    st.markdown(f"### Sales Trend & Engagement – {selected_name}")
+    st.markdown(f"<h3 style='font-family: Georgia, serif;'>Sales Trend & Engagement – {selected_name}</h3>",
+                unsafe_allow_html=True)
     col5, col6 = st.columns(2)
 
     with col5:
@@ -116,7 +150,8 @@ if section == "Dashboard":
         else:
             st.warning("No NFC engagement data for selected month.")
 
-    st.markdown("### Menu Performance & Monthly Sales")
+    st.markdown("<h3 style='font-family: Georgia, serif;'>Menu Performance & Monthly Sales</h3>",
+                unsafe_allow_html=True)
     perf = trans_items.merge(menu[["item_id", "item_name"]], on="item_id", how="left")
     perf = perf.merge(trans[["transaction_id", "month"]], on="transaction_id", how="left")
     perf = perf[perf["month"] == selected_month]
@@ -138,7 +173,8 @@ if section == "Dashboard":
         ).properties(title="Monthly Sales")
         st.altair_chart(chart, use_container_width=True)
 
-    st.markdown("### Campaign Analytics & Table Utilization")
+    st.markdown("<h3 style='font-family: Georgia, serif;'>Campaign Analytics & Table Utilization</h3>",
+                unsafe_allow_html=True)
     col9, col10 = st.columns(2)
     with col9:
         if not daily_sales.empty:
@@ -160,7 +196,7 @@ if section == "Dashboard":
         else:
             st.warning("No table usage data.")
 
-    st.markdown("### NFC Engagement Breakdown")
+    st.markdown("<h3 style='font-family: Georgia, serif;'>NFC Engagement Breakdown</h3>", unsafe_allow_html=True)
     if not nfc.empty:
         tag_counts = nfc["tag_type"].value_counts().reset_index()
         tag_counts.columns = ["tag_type", "count"]
@@ -173,12 +209,12 @@ if section == "Dashboard":
 
 # ============================ CUSTOMER SEGMENTS ================================
 elif section == "Customer Segments":
-    st.subheader("Customer Segmentation (RFM)")
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Customer Segmentation (RFM)</div>", unsafe_allow_html=True)
     st.info("Coming soon: RFM segments using Recency, Frequency, Monetary logic.")
 
 # ============================= CAMPAIGNS ========================================
 elif section == "Campaign Management":
-    st.subheader("Campaign Management")
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Campaign Management </h2>", unsafe_allow_html=True)
     if not campaigns.empty:
         st.dataframe(campaigns)
     else:
@@ -186,7 +222,8 @@ elif section == "Campaign Management":
 
 # ======================== MENU ITEM RECOMMENDATION =============================
 elif section == "Menu Recommendation":
-    st.subheader("Menu Item Recommendation Based on Time of Day")
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Menu Item Recommendation</div>",
+                unsafe_allow_html=True)
 
     time_period = st.selectbox("Select Time Period", [
         "Early Breakfast (04:00–06:29)",
