@@ -148,3 +148,20 @@ def login(obj_in: schemas.LoginRequest):
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid username or password",
     )
+
+
+@app.get("/api/dim_menu_items/", response_model=list[schemas.DimMenuItemOut])
+def get_dim_menu_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.crud_dim_menu_item.get_multi(db, skip=skip, limit=limit)
+
+@app.get("/api/dim_tables/", response_model=list[schemas.DimTableOut])
+def get_dim_tables(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.crud_dim_table.get_multi(db, skip=skip, limit=limit)
+
+@app.get("/api/dim_time/", response_model=list[schemas.DimTimeOut])
+def get_dim_time(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.crud_dim_time.get_multi(db, skip=skip, limit=limit)
+
+@app.get("/api/nfc_engagements/", response_model=list[schemas.NfcEngagementOut])
+def get_nfc_engagements(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.crud_nfc_engagement.get_multi(db, skip=skip, limit=limit)
