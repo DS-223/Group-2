@@ -34,23 +34,22 @@ services:
   etl:
     container_name: etl
     build:
-      context: api/
+      context: etl
       dockerfile: Dockerfile
     ports:
       - 3000:3000
     volumes:
-      - ./api:/api
+      - ./etl:/etl
     depends_on:
       db:
         condition: service_healthy
-    command: python -m api.etl.etl_process
     healthcheck:
       test: "exit 0"
 
   api:
     container_name: fastapi_api
     build:
-      context: ./api
+      context: api
       dockerfile: Dockerfile
     image: myapp_api:latest # to avoid conflicts with other images
     ports:
@@ -66,7 +65,7 @@ services:
   frontend:
     container_name: frontend
     build:
-      context: ./frontend
+      context: frontend
       dockerfile: Dockerfile
     image: myapp_frontend:latest # to avoid conflicts with other images
     ports:
@@ -82,7 +81,7 @@ services:
   ds:
     container_name: ds
     build:
-      context: ./ds
+      context: ds
       dockerfile: Dockerfile
     image: myapp_ds:latest # to avoid conflicts with other images
     ports:
