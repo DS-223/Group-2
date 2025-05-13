@@ -213,9 +213,7 @@ elif section == "Customer Segments":
         st.dataframe(rfm_segments)
     else:
         st.warning("No RFM segmentation data available.")
-<<<<<<< HEAD
 
-=======
     with st.markdown("### 🧩 Customer Segment Distribution"):
         seg_dist = rfm_segments["segment"].value_counts().reset_index()
         seg_dist.columns = ["segment", "count"]
