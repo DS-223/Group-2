@@ -1,5 +1,0 @@
-DB_USER=postgres
-DB_PASSWORD=securepassword
-DB_NAME=CRM
-PGADMIN_EMAIL=admin@admin.com
-PGADMIN_PASSWORD=admin
