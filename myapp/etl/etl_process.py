@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(__file__)) ####### DONT FORGET __file__ IN CASE 
 from data_generator import simulate_all
 
 # 👇 Import your models & DB session
-from database import SessionLocal, engine
+from database import SessionLocal
 import models
 
 # 🔑 Load DB connection string
