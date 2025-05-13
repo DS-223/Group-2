@@ -1,1 +1,72 @@
-site_name: My Docs
+site_name: SmartCRM Documentation
+site_url: https://ds-223.github.io/Group-2/
+
+nav:
+  - Home: index.md
+  - Architecture:
+      - Problem & Solution: index.md
+      - Architecture Diagram: architecture.md
+  - Services:
+      - API Service: api.md
+      - ETL Service: etl.md
+      - Frontend (Streamlit App): frontend.md
+      - Data Science & Analytics: ds.md
+      - Database Schema: database.md
+  - Notebooks:
+      - Result Analysis: notebook.md
+  - Feedback & Milestones:
+      - Milestone 1 Feedback: ../feedback/Milestone 1 Feedback.pdf
+      - Milestone 2 Feedback: ../feedback/Milestone 2 Feedback.pdf
+      - Milestone 3 Feedback: ../feedback/Milestone 3 Feedback.pdf
+  - Resources:
+      - Roadmap: ../Roadmap Group-2.pdf
+      - ER Diagram: ../erd.png
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+
+plugins:
+  - search
+  - mkdocs-jupyter
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append(".")
+          rendering:
+            show_source: true
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - tables
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - attr_list
