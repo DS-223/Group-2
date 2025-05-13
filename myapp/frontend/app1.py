@@ -43,6 +43,7 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
+    # Fetch from API
     menu = pd.DataFrame(requests.get(f"{API_BASE}/dim_menu_items/").json())
     tables = pd.DataFrame(requests.get(f"{API_BASE}/dim_tables/").json())
     time_df = pd.DataFrame(requests.get(f"{API_BASE}/dim_time/").json())
@@ -51,14 +52,9 @@ def load_data():
     campaigns = pd.DataFrame(requests.get(f"{API_BASE}/campaigns/").json())
     nfc = pd.DataFrame(requests.get(f"{API_BASE}/nfc_engagements/").json())
 
-    rfm_segments = pd.DataFrame(requests.get(f"{API_BASE}/rfm_segments/").json())
-    menu_recs = pd.DataFrame(requests.get(f"{API_BASE}/menu_recommendations/").json())
+    return menu, tables, time_df, trans_items, trans, campaigns, nfc
 
-    return menu, tables, time_df, trans_items, trans, campaigns, nfc, rfm_segments, menu_recs
-
-
-menu, tables, time_df, trans_items, trans, campaigns, nfc, rfm_segments, menu_recs = load_data()
-
+menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
 
 
 
@@ -208,163 +204,57 @@ if section == "Dashboard":
 
 # ============================ CUSTOMER SEGMENTS ================================
 elif section == "Customer Segments":
-    st.markdown("<h2 style='font-family: Georgia, serif;'>Customer Segmentation (RFM)</h2>", unsafe_allow_html=True)
-    if not rfm_segments.empty:
-        st.dataframe(rfm_segments)
-    else:
-        st.warning("No RFM segmentation data available.")
-    with st.markdown("### 🧩 Customer Segment Distribution"):
-        seg_dist = rfm_segments["segment"].value_counts().reset_index()
-        seg_dist.columns = ["segment", "count"]
-
-        chart = alt.Chart(seg_dist).mark_bar(color="#34A853").encode(
-            x=alt.X("count:Q", title="Number of Customers"),
-            y=alt.Y("segment:N", sort='-x', title="Segment"),
-            tooltip=["segment", "count"]
-        ).properties(
-            width=700,
-            height=300,
-            title="Distribution of Customers by Segment"
-        )
-        st.altair_chart(chart, use_container_width=True)
-    with st.expander("📈 Frequency vs Monetary Value"):
-        st.markdown("This scatter plot shows customer loyalty (frequency) vs. spending behavior (monetary value).")
-        chart = alt.Chart(rfm_segments).mark_circle(
-            size=80,
-            color="#EA4335",
-            opacity=0.6
-        ).encode(
-            x=alt.X("frequency:Q", title="Transaction Count"),
-            y=alt.Y("monetary:Q", title="Total Spend ($)"),
-            tooltip=["mobile_id", "frequency", "monetary", "segment"]
-        ).properties(
-            width=700,
-            height=400,
-            title="Customer Loyalty vs Revenue"
-        )
-        st.altair_chart(chart, use_container_width=True)
-
-    with st.expander("🕓 Recency Distribution"):
-        st.markdown("Shows how many days have passed since each customer’s last transaction.")
-        chart = alt.Chart(rfm_segments).mark_bar(
-            color="#4285F4"
-        ).encode(
-            x=alt.X("recency_days:Q", bin=alt.Bin(maxbins=20), title="Recency (Days Ago)"),
-            y=alt.Y("count()", title="Number of Customers"),
-            tooltip=["recency_days"]
-        ).properties(
-            width=700,
-            height=300,
-            title="How Recently Do Customers Return?"
-        )
-        st.altair_chart(chart, use_container_width=True)
-
-
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Customer Segmentation (RFM)</div>", unsafe_allow_html=True)
+    st.info("Coming soon: RFM segments using Recency, Frequency, Monetary logic.")
 
 # ============================= CAMPAIGNS ========================================
 elif section == "Campaign Management":
     st.markdown("<h2 style='font-family: Georgia, serif;'>Campaign Management </h2>", unsafe_allow_html=True)
-
     if not campaigns.empty:
         st.dataframe(campaigns)
-
-        st.markdown("### Campaigns by Target Segment")
-        seg_chart = alt.Chart(campaigns).mark_bar(color="#4285F4").encode(
-            x=alt.X("target_segment:N", title="Target Segment", axis=alt.Axis(labelAngle=45)),
-            y=alt.Y("count():Q", title="Number of Campaigns"),
-            tooltip=["target_segment", "count()"]
-        ).properties(
-            width=600,
-            height=300
-        )
-        st.altair_chart(seg_chart, use_container_width=True)
-
-        st.markdown("### Campaign Duration")
-        campaigns["duration"] = campaigns["end_time_id"] - campaigns["start_time_id"]
-        duration_chart = alt.Chart(campaigns).mark_bar(color="#EA4335").encode(
-            x=alt.X("name:N", sort="-y", title="Campaign Name",axis=alt.Axis(labelAngle=45)),
-            y=alt.Y("duration:Q", title="Duration (Time Units)"),
-            tooltip=["name", "duration"]
-        ).properties(
-            width=700,
-            height=300
-        )
-        st.altair_chart(duration_chart, use_container_width=True)
-
-
     else:
         st.warning("No campaigns data available.")
 
 # ======================== MENU ITEM RECOMMENDATION =============================
 elif section == "Menu Recommendation":
-    st.markdown("<h2 style='font-family: Georgia, serif;'>🍽️ Menu Item Recommendation</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Menu Item Recommendation</div>",
+                unsafe_allow_html=True)
 
-    if menu_recs.empty or menu.empty:
-        st.warning("No menu recommendations available.")
-    else:
-        # Daytime display names
-        daytime_map = {
-            1: "🌅 Early Breakfast (04:00–06:29)",
-            2: "🍳 Standard Breakfast (06:30–10:29)",
-            3: "🥞 Late Breakfast / Brunch (10:30–12:29)",
-            4: "🥪 Lunch (12:30–14:29)",
-            5: "🫖 Late Lunch (14:30–16:29)",
-            6: "🍰 Afternoon Tea / Snack (16:30–17:59)",
-            7: "🍝 Early Dinner (18:00–19:29)",
-            8: "🥩 Standard Dinner (19:30–21:29)",
-            9: "🍣 Late Dinner / Supper (21:30–23:59)",
-            10: "🌙 Midnight Snack (00:00–01:59)",
-            11: "⛔ Closed / No Service (02:00–03:59)",
-        }
-        reverse_daytime_map = {v: k for k, v in daytime_map.items()}
+    time_period = st.selectbox("Select Time Period", [
+        "Early Breakfast (04:00–06:29)",
+        "Standard Breakfast (06:30–10:29)",
+        "Late Breakfast / Brunch (10:30–12:29)",
+        "Lunch (12:30–14:29)",
+        "Late Lunch (14:30–16:29)",
+        "Afternoon Tea / Snack (16:30–17:59)",
+        "Early Dinner (18:00–19:29)",
+        "Standard Dinner (19:30–21:29)",
+        "Late Dinner / Supper (21:30–23:59)",
+        "Midnight Snack (00:00–01:59)",
+        "Closed / No Service (02:00–03:59)"
+    ])
 
-        # Let user pick a time slot (but default is nothing shown)
-        selected_slot = st.selectbox("Select Time Period", [""] + list(daytime_map.values()))
+    st.info("Recommendations will be shown here based on the selected time period. (Coming Soon)")
 
-        if selected_slot:
-            selected_id = reverse_daytime_map[selected_slot]
-            filtered_recs = (
-                menu_recs[menu_recs["daytime_id"] == selected_id]
-                .merge(menu[["item_id", "menu_item_name"]], left_on="menu_item_id", right_on="item_id", how="left")
-                .drop_duplicates(subset=["menu_item_id", "rank"])
-                .sort_values("rank")
-            )
-
-            if not filtered_recs.empty:
-                st.markdown(f"<h4 style='margin-top: 1em;'>Top Menu Items for {selected_slot}</h4>", unsafe_allow_html=True)
-                for _, row in filtered_recs.iterrows():
-                    st.markdown(
-                        f"""
-                        <div style="background-color:#f5f8ff; padding:10px; margin-bottom:10px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                            <strong>#{row['rank']}</strong> — {row['menu_item_name']}
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-            else:
-                st.info("No recommendations found for this time slot.")
-        else:
-            st.markdown("<div style='color: #999;'>Please select a time slot to view recommendations.</div>", unsafe_allow_html=True)
-    with st.expander("Top 10 Most-Recommended Items"):
-        top_items = (
-            menu_recs
-            .merge(menu[["item_id", "menu_item_name"]], left_on="menu_item_id", right_on="item_id")
-            .groupby("menu_item_name")["rank"]
-            .count()
-            .sort_values(ascending=False)
-            .head(10)
-            .reset_index()
-            .rename(columns={"rank": "Times Recommended"})
-        )
-
-        chart = alt.Chart(top_items).mark_bar(color="#FBBC05").encode(
-            x=alt.X("menu_item_name:N", sort="-y", title="Menu Item", axis=alt.Axis(labelAngle=45)),
-
-            y=alt.Y("Times Recommended:Q"),
-            tooltip=["menu_item_name", "Times Recommended"]
-        ).properties(
-            width=700,
-            height=400
-        )
-
-        st.altair_chart(chart, use_container_width=True)
+    if "Early Breakfast" in time_period:
+        st.write("Example Recommendations: Light toast, green tea, fruit bowl")
+    elif "Standard Breakfast" in time_period:
+        st.write("Example Recommendations: Eggs Benedict, orange juice, coffee")
+    elif "Late Breakfast" in time_period:
+        st.write("Example Recommendations: Pancakes, latte, smoothie bowl")
+    elif "Lunch (" in time_period:
+        st.write("Example Recommendations: Grilled chicken wrap, lemonade, salad")
+    elif "Late Lunch" in time_period:
+        st.write("Example Recommendations: Quiche, iced tea, fruit")
+    elif "Afternoon Tea" in time_period:
+        st.write("Example Recommendations: Cupcakes, black tea, macarons")
+    elif "Early Dinner" in time_period:
+        st.write("Example Recommendations: Pasta, house wine, garden salad")
+    elif "Standard Dinner" in time_period:
+        st.write("Example Recommendations: Steak, red wine, roasted vegetables")
+    elif "Late Dinner" in time_period:
+        st.write("Example Recommendations: Sushi rolls, beer, ramen")
+    elif "Midnight Snack" in time_period:
+        st.write("Example Recommendations: Nachos, hot chocolate, fries")
+    elif "Closed" in time_period:
+        st.warning("Kitchen is closed during this time. No service available.")
