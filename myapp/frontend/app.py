@@ -251,8 +251,34 @@ elif section == "Customer Segments":
 # ============================= CAMPAIGNS ========================================
 elif section == "Campaign Management":
     st.markdown("<h2 style='font-family: Georgia, serif;'>Campaign Management </h2>", unsafe_allow_html=True)
+
     if not campaigns.empty:
         st.dataframe(campaigns)
+
+        st.markdown("### Campaigns by Target Segment")
+        seg_chart = alt.Chart(campaigns).mark_bar(color="#4285F4").encode(
+            x=alt.X("target_segment:N", title="Target Segment", axis=alt.Axis(labelAngle=45)),
+            y=alt.Y("count():Q", title="Number of Campaigns"),
+            tooltip=["target_segment", "count()"]
+        ).properties(
+            width=600,
+            height=300
+        )
+        st.altair_chart(seg_chart, use_container_width=True)
+
+        st.markdown("### Campaign Duration")
+        campaigns["duration"] = campaigns["end_time_id"] - campaigns["start_time_id"]
+        duration_chart = alt.Chart(campaigns).mark_bar(color="#EA4335").encode(
+            x=alt.X("name:N", sort="-y", title="Campaign Name",axis=alt.Axis(labelAngle=45)),
+            y=alt.Y("duration:Q", title="Duration (Time Units)"),
+            tooltip=["name", "duration"]
+        ).properties(
+            width=700,
+            height=300
+        )
+        st.altair_chart(duration_chart, use_container_width=True)
+
+
     else:
         st.warning("No campaigns data available.")
 
