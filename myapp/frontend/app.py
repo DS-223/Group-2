@@ -43,7 +43,6 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    # Fetch from API
     menu = pd.DataFrame(requests.get(f"{API_BASE}/dim_menu_items/").json())
     tables = pd.DataFrame(requests.get(f"{API_BASE}/dim_tables/").json())
     time_df = pd.DataFrame(requests.get(f"{API_BASE}/dim_time/").json())
@@ -52,9 +51,14 @@ def load_data():
     campaigns = pd.DataFrame(requests.get(f"{API_BASE}/campaigns/").json())
     nfc = pd.DataFrame(requests.get(f"{API_BASE}/nfc_engagements/").json())
 
-    return menu, tables, time_df, trans_items, trans, campaigns, nfc
+    rfm_segments = pd.DataFrame(requests.get(f"{API_BASE}/rfm_segments/").json())
+    menu_recs = pd.DataFrame(requests.get(f"{API_BASE}/menu_recommendations/").json())
 
-menu, tables, time_df, trans_items, trans, campaigns, nfc = load_data()
+    return menu, tables, time_df, trans_items, trans, campaigns, nfc, rfm_segments, menu_recs
+
+
+menu, tables, time_df, trans_items, trans, campaigns, nfc, rfm_segments, menu_recs = load_data()
+
 
 
 
@@ -204,8 +208,11 @@ if section == "Dashboard":
 
 # ============================ CUSTOMER SEGMENTS ================================
 elif section == "Customer Segments":
-    st.markdown("<h2 style='font-family: Georgia, serif;'>Customer Segmentation (RFM)</div>", unsafe_allow_html=True)
-    st.info("Coming soon: RFM segments using Recency, Frequency, Monetary logic.")
+    st.markdown("<h2 style='font-family: Georgia, serif;'>Customer Segmentation (RFM)</h2>", unsafe_allow_html=True)
+    if not rfm_segments.empty:
+        st.dataframe(rfm_segments)
+    else:
+        st.warning("No RFM segmentation data available.")
 
 # ============================= CAMPAIGNS ========================================
 elif section == "Campaign Management":
@@ -217,44 +224,51 @@ elif section == "Campaign Management":
 
 # ======================== MENU ITEM RECOMMENDATION =============================
 elif section == "Menu Recommendation":
-    st.markdown("<h2 style='font-family: Georgia, serif;'>Menu Item Recommendation</div>",
-                unsafe_allow_html=True)
+    st.markdown("<h2 style='font-family: Georgia, serif;'>🍽️ Menu Item Recommendation</h2>", unsafe_allow_html=True)
 
-    time_period = st.selectbox("Select Time Period", [
-        "Early Breakfast (04:00–06:29)",
-        "Standard Breakfast (06:30–10:29)",
-        "Late Breakfast / Brunch (10:30–12:29)",
-        "Lunch (12:30–14:29)",
-        "Late Lunch (14:30–16:29)",
-        "Afternoon Tea / Snack (16:30–17:59)",
-        "Early Dinner (18:00–19:29)",
-        "Standard Dinner (19:30–21:29)",
-        "Late Dinner / Supper (21:30–23:59)",
-        "Midnight Snack (00:00–01:59)",
-        "Closed / No Service (02:00–03:59)"
-    ])
+    if menu_recs.empty or menu.empty:
+        st.warning("No menu recommendations available.")
+    else:
+        # Daytime display names
+        daytime_map = {
+            1: "🌅 Early Breakfast (04:00–06:29)",
+            2: "🍳 Standard Breakfast (06:30–10:29)",
+            3: "🥞 Late Breakfast / Brunch (10:30–12:29)",
+            4: "🥪 Lunch (12:30–14:29)",
+            5: "🫖 Late Lunch (14:30–16:29)",
+            6: "🍰 Afternoon Tea / Snack (16:30–17:59)",
+            7: "🍝 Early Dinner (18:00–19:29)",
+            8: "🥩 Standard Dinner (19:30–21:29)",
+            9: "🍣 Late Dinner / Supper (21:30–23:59)",
+            10: "🌙 Midnight Snack (00:00–01:59)",
+            11: "⛔ Closed / No Service (02:00–03:59)",
+        }
+        reverse_daytime_map = {v: k for k, v in daytime_map.items()}
 
-    st.info("Recommendations will be shown here based on the selected time period. (Coming Soon)")
+        # Let user pick a time slot (but default is nothing shown)
+        selected_slot = st.selectbox("Select Time Period", [""] + list(daytime_map.values()))
 
-    if "Early Breakfast" in time_period:
-        st.write("Example Recommendations: Light toast, green tea, fruit bowl")
-    elif "Standard Breakfast" in time_period:
-        st.write("Example Recommendations: Eggs Benedict, orange juice, coffee")
-    elif "Late Breakfast" in time_period:
-        st.write("Example Recommendations: Pancakes, latte, smoothie bowl")
-    elif "Lunch (" in time_period:
-        st.write("Example Recommendations: Grilled chicken wrap, lemonade, salad")
-    elif "Late Lunch" in time_period:
-        st.write("Example Recommendations: Quiche, iced tea, fruit")
-    elif "Afternoon Tea" in time_period:
-        st.write("Example Recommendations: Cupcakes, black tea, macarons")
-    elif "Early Dinner" in time_period:
-        st.write("Example Recommendations: Pasta, house wine, garden salad")
-    elif "Standard Dinner" in time_period:
-        st.write("Example Recommendations: Steak, red wine, roasted vegetables")
-    elif "Late Dinner" in time_period:
-        st.write("Example Recommendations: Sushi rolls, beer, ramen")
-    elif "Midnight Snack" in time_period:
-        st.write("Example Recommendations: Nachos, hot chocolate, fries")
-    elif "Closed" in time_period:
-        st.warning("Kitchen is closed during this time. No service available.")
+        if selected_slot:
+            selected_id = reverse_daytime_map[selected_slot]
+            filtered_recs = (
+                menu_recs[menu_recs["daytime_id"] == selected_id]
+                .merge(menu[["item_id", "menu_item_name"]], left_on="menu_item_id", right_on="item_id", how="left")
+                .drop_duplicates(subset=["menu_item_id", "rank"])
+                .sort_values("rank")
+            )
+
+            if not filtered_recs.empty:
+                st.markdown(f"<h4 style='margin-top: 1em;'>Top Menu Items for {selected_slot}</h4>", unsafe_allow_html=True)
+                for _, row in filtered_recs.iterrows():
+                    st.markdown(
+                        f"""
+                        <div style="background-color:#f5f8ff; padding:10px; margin-bottom:10px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                            <strong>#{row['rank']}</strong> — {row['menu_item_name']}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+            else:
+                st.info("No recommendations found for this time slot.")
+        else:
+            st.markdown("<div style='color: #999;'>Please select a time slot to view recommendations.</div>", unsafe_allow_html=True)
