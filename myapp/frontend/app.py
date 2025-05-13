@@ -214,6 +214,20 @@ elif section == "Customer Segments":
     else:
         st.warning("No RFM segmentation data available.")
 
+    with st.markdown("### 🧩 Customer Segment Distribution"):
+        seg_dist = rfm_segments["segment"].value_counts().reset_index()
+        seg_dist.columns = ["segment", "count"]
+
+        chart = alt.Chart(seg_dist).mark_bar(color="#34A853").encode(
+            x=alt.X("count:Q", title="Number of Customers"),
+            y=alt.Y("segment:N", sort='-x', title="Segment"),
+            tooltip=["segment", "count"]
+        ).properties(
+            width=700,
+            height=300,
+            title="Distribution of Customers by Segment"
+        )
+        st.altair_chart(chart, use_container_width=True)
     with st.expander("📈 Frequency vs Monetary Value"):
         st.markdown("This scatter plot shows customer loyalty (frequency) vs. spending behavior (monetary value).")
         chart = alt.Chart(rfm_segments).mark_circle(
