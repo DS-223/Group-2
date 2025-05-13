@@ -36,3 +36,6 @@ typing-extensions==4.13.2
 urllib3==2.2.3
 watchdog==4.0.2
 zipp==3.20.2
+mkdocs-jupyter
+pillow
+cairosvg
