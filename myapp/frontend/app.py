@@ -214,6 +214,40 @@ elif section == "Customer Segments":
     else:
         st.warning("No RFM segmentation data available.")
 
+    with st.expander("📈 Frequency vs Monetary Value"):
+        st.markdown("This scatter plot shows customer loyalty (frequency) vs. spending behavior (monetary value).")
+        chart = alt.Chart(rfm_segments).mark_circle(
+            size=80,
+            color="#EA4335",
+            opacity=0.6
+        ).encode(
+            x=alt.X("frequency:Q", title="Transaction Count"),
+            y=alt.Y("monetary:Q", title="Total Spend ($)"),
+            tooltip=["mobile_id", "frequency", "monetary", "segment"]
+        ).properties(
+            width=700,
+            height=400,
+            title="Customer Loyalty vs Revenue"
+        )
+        st.altair_chart(chart, use_container_width=True)
+
+    with st.expander("🕓 Recency Distribution"):
+        st.markdown("Shows how many days have passed since each customer’s last transaction.")
+        chart = alt.Chart(rfm_segments).mark_bar(
+            color="#4285F4"
+        ).encode(
+            x=alt.X("recency_days:Q", bin=alt.Bin(maxbins=20), title="Recency (Days Ago)"),
+            y=alt.Y("count()", title="Number of Customers"),
+            tooltip=["recency_days"]
+        ).properties(
+            width=700,
+            height=300,
+            title="How Recently Do Customers Return?"
+        )
+        st.altair_chart(chart, use_container_width=True)
+
+
+
 # ============================= CAMPAIGNS ========================================
 elif section == "Campaign Management":
     st.markdown("<h2 style='font-family: Georgia, serif;'>Campaign Management </h2>", unsafe_allow_html=True)
@@ -272,3 +306,26 @@ elif section == "Menu Recommendation":
                 st.info("No recommendations found for this time slot.")
         else:
             st.markdown("<div style='color: #999;'>Please select a time slot to view recommendations.</div>", unsafe_allow_html=True)
+    with st.expander("Top 10 Most-Recommended Items"):
+        top_items = (
+            menu_recs
+            .merge(menu[["item_id", "menu_item_name"]], left_on="menu_item_id", right_on="item_id")
+            .groupby("menu_item_name")["rank"]
+            .count()
+            .sort_values(ascending=False)
+            .head(10)
+            .reset_index()
+            .rename(columns={"rank": "Times Recommended"})
+        )
+
+        chart = alt.Chart(top_items).mark_bar(color="#FBBC05").encode(
+            x=alt.X("menu_item_name:N", sort="-y", title="Menu Item", axis=alt.Axis(labelAngle=45)),
+
+            y=alt.Y("Times Recommended:Q"),
+            tooltip=["menu_item_name", "Times Recommended"]
+        ).properties(
+            width=700,
+            height=400
+        )
+
+        st.altair_chart(chart, use_container_width=True)
